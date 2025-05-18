@@ -11,6 +11,8 @@ std::vector<Vec3> checkpoints;
 int activeCheckpointIndex = -1;
 // const float checkpointRadius = 1.5f; // Dipindahkan ke globals.h
 
+// extern float totalRotationAngleX; // If statics in marble.cpp are made global for reset
+// extern float totalRotationAngleZ; // Or provide a reset function in marble.h
 
 void addCheckpoint(float x, float z) {
     checkpoints.push_back({x, 0.0f, z}); // Y is placeholder
@@ -53,10 +55,23 @@ void resetMarble() {
 
     marbleX = resetPos.x;
     marbleZ = resetPos.z;
+    float resetGroundH, dummyNX, dummyNY, dummyNZ;
+    getArenaHeightAndNormal(marbleX, marbleZ, resetGroundH, dummyNX, dummyNY, dummyNZ);
+    marbleY = resetGroundH + 0.5f; // Assuming marble radius 0.5f
+
     marbleVX = 0.0f;
     marbleVZ = 0.0f;
-}
+    marbleVY = 0.0f;
 
+    // To reset visual rolling, either make totalRotationAngleX/Z global
+    // or call a specific reset function from marble.h/cpp.
+    // For now, assuming resetMarbleInitialState() in marble.cpp handles its own statics
+    // and this function is for checkpoint-based resets.
+    // If totalRotationAngleX/Z are file static in marble.cpp, they won't be reset here
+    // unless marble.cpp provides a function to do so, or they are made extern.
+    // For simplicity, if you call resetMarbleInitialState() from your game's global reset,
+    // that will handle the visual part for a full game reset.
+}
 
 void setupCheckpoints() {
     // Ensure BOUNDS is accessible if used directly or pass it if it's not global from globals.h

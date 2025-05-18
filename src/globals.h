@@ -16,15 +16,15 @@ struct GLUquadric;
 // Arena constants
 const int GRID_SIZE = 150;          // Definisikan GRID_SIZE di sini
 const float BOUNDS = 15.0f;
-const float minGroundHeight = -10.0f;
+const float minGroundHeight = -20.0f; // Threshold for falling out of bounds
 const float defaultFallingHeight = -8.0f;
 const float pathBaseHeight = 0.5f;
 
 // Physics constants
-const float gravity = 9.8f;
-const float friction = 0.95f;
-const float deltaTime = 0.016f;
-const float inputPushForce = 40.0f;
+const float gravity = 20.0f;    // Adjusted gravity
+const float friction = 0.98f;   // Damping factor
+const float deltaTime = 0.016f; // Example fixed delta time
+const float inputPushForce = 30.0f;
 
 // Mouse sensitivity
 const float mouseSensitivity = 0.4f;
@@ -32,11 +32,14 @@ const float mouseSensitivity = 0.4f;
 // Checkpoint radius
 const float checkpointRadius = 1.5f;
 
+// Marble radius
+const float marbleRadius = 0.5f; // Define marble radius globally
 
 // --- Extern Global Variables ---
 // Marble position and velocity
 extern float marbleX, marbleZ;
 extern float marbleVX, marbleVZ;
+extern float marbleY, marbleVY; // Add these
 
 // Camera Variables
 extern float cameraAngleX;
@@ -50,6 +53,7 @@ extern int lastMouseX, lastMouseY;
 
 // Keyboard State Variables
 extern bool keyStates[256];
+extern bool specialKeyStates[256];
 
 // Arena Geometry Data (Heightmap)
 // Deklarasi ini sekarang valid karena GRID_SIZE adalah konstanta yang diketahui
