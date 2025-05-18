@@ -5,6 +5,7 @@
 #include <vector>
 #include <cmath>     // For fabs, sqrt
 #include <iostream>  // For std::cout
+#include <GL/glut.h>
 
 // Variabel global dari globals.h yang terutama terkait checkpoint
 std::vector<Vec3> checkpoints;
@@ -37,6 +38,47 @@ void checkCheckpointCollision() {
             }
         }
     }
+}
+
+void drawCheckpoints() {
+    // Aktifkan blending untuk checkpoint yang sudah diambil (transparan)
+    // Untuk checkpoint yang belum diambil, kita akan menonaktifkan blend sementara
+    // agar warna kuningnya solid.
+    glPushAttrib(GL_ENABLE_BIT | GL_CURRENT_BIT | GL_LIGHTING_BIT); // Simpan state GL
+    glEnable(GL_LIGHTING); // Pastikan lighting aktif untuk checkpoint
+
+    for (size_t i = 0; i < checkpoints.size(); ++i) {
+        const Vec3& cp_data = checkpoints[i]; // cp_data.y adalah Y yang disimpan saat addCheckpoint (saat ini 0.0f)
+
+        float cpGroundH, dummyNX, dummyNY, dummyNZ;
+        // Dapatkan ketinggian tanah di lokasi XZ checkpoint
+        getArenaHeightAndNormal(cp_data.x, cp_data.z, cpGroundH, dummyNX, dummyNY, dummyNZ);
+        
+        // Radius visual checkpoint adalah setengah dari radius bola pemain
+        float visualCheckpointRadius = marbleRadius * 0.5f;
+        // Y efektif untuk visual checkpoint (pusat bola checkpoint)
+        float cpEffectiveY = cpGroundH + visualCheckpointRadius;
+
+        glPushMatrix();
+        glTranslatef(cp_data.x, cpEffectiveY, cp_data.z);
+
+        if ((int)i > activeCheckpointIndex) {
+            // Checkpoint belum diambil: warna kuning solid
+            glEnable(GL_BLEND); // Nonaktifkan blending untuk warna solid
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // Atur fungsi blending
+            glColor4f(1.0f, 1.0f, 0.0f, 0.5f); // Kuning solid dengan alpha 0.5
+        } else {
+            // Checkpoint sudah diambil: transparan
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glColor4f(0.6f, 0.6f, 0.6f, 0.25f); // Abu-abu dengan alpha 0.25 (cukup transparan)
+        }
+        
+        glutSolidSphere(visualCheckpointRadius, 16, 16); // Gambar bola checkpoint
+
+        glPopMatrix();
+    }
+    glPopAttrib(); // Kembalikan state GL
 }
 
 void resetMarble() {
@@ -75,10 +117,8 @@ void resetMarble() {
 
 void setupCheckpoints() {
     // Ensure BOUNDS is accessible if used directly or pass it if it's not global from globals.h
+
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~buat checkpoint di sini~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     addCheckpoint(0.0f, -BOUNDS + 2.0f);
-    addCheckpoint(0.0f, -BOUNDS + 7.0f);
     addCheckpoint(0.0f, -BOUNDS + 12.0f);
-    addCheckpoint(0.0f, -BOUNDS + 16.0f);
-    addCheckpoint(-BOUNDS + 4.0f, -BOUNDS + 16.0f);
-    addCheckpoint(-BOUNDS + 12.0f, -BOUNDS + 12.0f);
 }

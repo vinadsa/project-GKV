@@ -110,17 +110,11 @@ void setupArenaGeometry() {
     // Membuat platform awal yang datar sebagai alas
     addFlatArea(0.0f, 0.0f, BOUNDS*2.0f, BOUNDS*2.0f, pathBaseHeight - 2.0f); // pathBaseHeight dari globals.h
 
-    // Kubus pertama di tengah, sedikit terangkat
-    Kubus(0.0f, pathBaseHeight + 1.0f, 0.0f, 5.0f, 2.0f, 5.0f);
+    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~BUAT ARENA DIBAWAH INI~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    addRampArea(1.0f, 0.0f, 6.5f, 10.0f, pathBaseHeight - 2.0f, pathBaseHeight + 2.0f, 'z');
+    Kubus(0.0f, pathBaseHeight + 1.0f, 0.0f, 5.0f, 1.0f, 10.0f); // Kubus di tengah arena
 
-    // // Kubus kedua sebagai dinding di satu sisi
-    // Kubus(8.0f, pathBaseHeight + 2.0f, 0.0f, 2.0f, 4.0f, 10.0f);
-
-    // // Kubus ketiga lebih kecil dan lebih tinggi
-    // Kubus(-5.0f, pathBaseHeight + 3.0f, -8.0f, 3.0f, 6.0f, 3.0f);~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-    // Anda bisa menambahkan lebih banyak panggilan ke Kubus() atau fungsi pembuatan arena lainnya di sini
-    // untuk membangun level yang lebih kompleks.
+    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~BATAS PEMBUATAN ARENA~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 }
 
 // --- Arena Physics Lookup Functions ---

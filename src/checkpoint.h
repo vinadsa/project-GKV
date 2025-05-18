@@ -7,5 +7,5 @@ void addCheckpoint(float x, float z);
 void checkCheckpointCollision();
 void resetMarble(); // Centralized reset logic
 void setupCheckpoints(); // To add all checkpoints in one place
-
+void drawCheckpoints();
 #endif // CHECKPOINT_H

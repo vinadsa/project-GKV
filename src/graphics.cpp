@@ -5,6 +5,7 @@
 #include "camera.h"   // For camera variables (accessing via globals)
 #include "physics.h"  // For updatePhysics
 #include "utils.h"    // For degToRad
+#include "checkpoint.h" // For drawCheckpoints
 #include <GL/glut.h>
 #include <GL/glu.h>   // For gluSphere, GLUquadric, gluBuild2DMipmaps
 #include <cmath>     // For cos, sin
@@ -80,7 +81,7 @@ void display() {
 
     drawGround();
     drawMarble();
-
+    drawCheckpoints();
     glutSwapBuffers();
 }
 
