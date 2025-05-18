@@ -4,6 +4,9 @@
 #include <GL/glut.h>
 #include <vector>
 
+// Forward declare GLUquadric to avoid including full glu.h here
+struct GLUquadric;
+
 // Define PI manually for reliability if M_PI is not available
 #ifndef M_PI
 #define M_PI 3.14159265358979323846f
@@ -59,5 +62,8 @@ struct Vec3 {
 
 extern std::vector<Vec3> checkpoints;
 extern int activeCheckpointIndex;
+
+extern GLuint marbleTextureID; // For the marble texture
+extern GLUquadric* sphereQuadric; // For drawing textured spheres
 
 #endif // GLOBALS_H
