@@ -21,7 +21,7 @@ const float defaultFallingHeight = -8.0f;
 const float pathBaseHeight = 0.5f;
 
 // Physics constants
-const float gravity = 20.0f;    // Adjusted gravity
+const float gravity = 25.0f;    // Adjusted gravity
 const float friction = 0.98f;   // Damping factor
 const float deltaTime = 0.016f; // Example fixed delta time
 const float inputPushForce = 30.0f;
@@ -34,6 +34,10 @@ const float checkpointRadius = 1.5f;
 
 // Marble radius
 const float marbleRadius = 0.5f; // Define marble radius globally
+
+// Restitution constants (bounciness)
+const float restitution_ground = 0.5f; // How much energy is kept on ground bounce (0=no bounce, 1=perfect bounce)
+const float restitution_wall = 0.4f;   // How much energy is kept on wall bounce
 
 // --- Extern Global Variables ---
 // Marble position and velocity

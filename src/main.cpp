@@ -1,4 +1,5 @@
 #include <GL/glut.h>
+#include <cmath>         // For trigonometric functions like sin() and cos()
 #include "globals.h"      // For global variables and M_PI (though M_PI might be better in utils.h if not widely needed)
 #include "utils.h"
 #include "arena.h"
@@ -18,6 +19,7 @@ void initGame() {
     resetMarble();           // Reset marble to the first checkpoint (or defined start)
     initGraphics();          // Initialize OpenGL specific settings (lighting, depth test, etc.)
 }
+
 
 int main(int argc, char** argv) {
     glutInit(&argc, argv);

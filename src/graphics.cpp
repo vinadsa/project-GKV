@@ -62,22 +62,32 @@ void display() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glLoadIdentity();
 
+    // Camera target (look-at point)
     float targetX = marbleX;
-    float targetGroundY, dummyNX, dummyNY, dummyNZ;
-    getArenaHeightAndNormal(marbleX, marbleZ, targetGroundY, dummyNX, dummyNY, dummyNZ);
-    float targetY = targetGroundY + cameraTargetYOffset;
+    // Use marbleY directly for the target's Y position, so the camera follows the marble in the air.
+    float targetY = marbleY + cameraTargetYOffset; // MODIFIED LINE
     float targetZ = marbleZ;
 
+    // Calculate camera's eye position (eyeX, eyeY, eyeZ)
     float camAngleXRad = degToRad(cameraAngleX);
     float camAngleYRad = degToRad(cameraAngleY);
 
-    float camX = targetX + cameraDistance * cos(camAngleYRad) * sin(camAngleXRad);
-    float camY = targetY + cameraDistance * sin(camAngleYRad);
-    float camZ = targetZ + cameraDistance * cos(camAngleYRad) * cos(camAngleXRad);
+    // Corrected camera position calculation based on spherical coordinates
+    // Assuming cameraDistance is the distance from the target point to the camera.
+    // The camera orbits around the target point.
+    float eyeX = targetX + cameraDistance * cos(camAngleYRad) * sin(camAngleXRad);
+    float eyeY = targetY + cameraDistance * sin(camAngleYRad);
+    float eyeZ = targetZ + cameraDistance * cos(camAngleYRad) * cos(camAngleXRad);
 
-    gluLookAt(camX, camY, camZ,
+    // Ensure camera doesn't go below a certain height relative to the target or absolute minimum
+    // This can prevent clipping into the marble or ground if cameraAngleY is too steep.
+    // Example: if (eyeY < targetY + 0.2f) eyeY = targetY + 0.2f; // Keep camera slightly above target Y
+    // Example: if (eyeY < 0.1f) eyeY = 0.1f; // Absolute minimum camera height
+
+
+    gluLookAt(eyeX, eyeY, eyeZ,
               targetX, targetY, targetZ,
-              0.0, 1.0, 0.0);
+              0.0, 1.0, 0.0); // Up vector
 
     drawGround();
     drawMarble();

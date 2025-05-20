@@ -1,5 +1,5 @@
 #include "physics.h"
-#include "globals.h"  // Sekarang menyertakan gravity, friction, deltaTime, inputPushForce
+#include "globals.h"  // Sekarang menyertakan gravity, friction, deltaTime, inputPushForce, restitution_ground, restitution_wall
 #include "utils.h"    // For clamp, degToRad
 #include "arena.h"    // For getArenaHeightAndNormal
 #include "marble.h"   // For marbleX, marbleZ etc. (accessing via globals)
@@ -13,16 +13,15 @@ void updatePhysics() {
     getArenaHeightAndNormal(marbleX, marbleZ, initialGroundHeight, normalX, normalY, normalZ);
 
     // Check for falling out of bounds (use marbleY)
-    // minGroundHeight should be a very low value, e.g., -50.0f
     if (marbleY < minGroundHeight) {
-        resetMarble(); // This now calls the function from checkpoint.cpp
+        resetMarble();
         return;
     }
 
     checkCheckpointCollision();
 
     // --- Vertical Physics ---
-    marbleVY -= gravity * deltaTime; // Apply gravity (gravity should be a positive value like 9.8)
+    marbleVY -= gravity * deltaTime;
 
     // --- Horizontal Physics (Forces based on slope from initial position) ---
     float gravityVecY = -gravity;
@@ -33,8 +32,7 @@ void updatePhysics() {
     float accX = gravityForceX;
     float accZ = gravityForceZ;
 
-    // --- Player Input (already exists) ---
-    // ... (input code using normalY for slopeFactor) ...
+    // --- Player Input ---
     float camAngleXRad = degToRad(cameraAngleX);
     float cosCam = cos(camAngleXRad);
     float sinCam = sin(camAngleXRad);
@@ -50,14 +48,11 @@ void updatePhysics() {
     if (inputMagnitude > 1e-6) {
         inputDirX /= inputMagnitude;
         inputDirZ /= inputMagnitude;
-
-        float slopeFactor = clamp(normalY, 0.0f, 1.0f); // Use normalY from start of frame
+        float slopeFactor = clamp(normalY, 0.0f, 1.0f);
         float effectivePushForce = inputPushForce * slopeFactor;
-
         accX += inputDirX * effectivePushForce;
         accZ += inputDirZ * effectivePushForce;
     }
-    // ...existing code...
 
     // --- Update Velocities ---
     marbleVX += accX * deltaTime;
@@ -69,60 +64,136 @@ void updatePhysics() {
     // Consider a small air_friction for marbleVY if desired: marbleVY *= air_friction_factor;
 
     // --- Horizontal Collision Detection & Response ---
-    const float wall_slope_normal_Y_threshold = 0.5f; // Normals with Y component less than this are "walls"
-    const float collision_check_offset = 0.01f; // Small offset to prevent floating point issues
+    const float wall_slope_normal_Y_threshold = 0.5f;
+    const float collision_check_offset = 0.01f; // Used in height check, makes collision detected slightly sooner
+    const int CCD_SEGMENTS = 2; // Number of segments to divide the leading edge's path into for collision checks.
+                                // 0 means 1 check at the end. 1 means 2 checks (start, end). 2 means 3 checks (start, mid, end).
+    const float R_eff = marbleRadius - 0.001f; // Effective radius for probing, slightly smaller to avoid sampling issues
 
-    // Check X-direction movement
-    if (marbleVX != 0.0f) {
-        float potential_next_marbleX = marbleX + marbleVX * deltaTime;
-        float ground_h_at_next_X, norm_x_at_next_X, norm_y_at_next_X, norm_z_at_next_X;
-        getArenaHeightAndNormal(potential_next_marbleX, marbleZ, ground_h_at_next_X, norm_x_at_next_X, norm_y_at_next_X, norm_z_at_next_X);
+    // --- Check X-direction movement ---
+    float vx_before_x_collision = marbleVX;
+    float vy_at_x_collision_check = marbleVY;
+    float vz_at_x_collision_check = marbleVZ;
+    bool collision_handled_X = false;
 
-        bool is_wall_slope_X = (norm_y_at_next_X < wall_slope_normal_Y_threshold);
-        // Check if the marble's current bottom would be lower than the potential new ground height
-        bool would_collide_height_X = (marbleY - marbleRadius < ground_h_at_next_X - collision_check_offset);
+    if (vx_before_x_collision != 0.0f) {
+        float signVX = (vx_before_x_collision > 0.0f ? 1.0f : -1.0f);
 
-        if (is_wall_slope_X && would_collide_height_X) {
-            marbleVX = 0.0f; // Stop X-motion
+        // Start and end X-coordinates of the marble's leading surface during this deltaTime step
+        float leading_edge_initial_X = marbleX + signVX * R_eff;
+        float final_center_X_candidate = marbleX + vx_before_x_collision * deltaTime;
+        float leading_edge_final_X = final_center_X_candidate + signVX * R_eff;
+
+        for (int i = 0; i <= CCD_SEGMENTS; ++i) {
+            float fraction = (CCD_SEGMENTS == 0) ? 1.0f : (float)i / CCD_SEGMENTS;
+            // terrain_probe_X is the actual X coordinate on the terrain we are checking
+            float terrain_probe_X = leading_edge_initial_X + fraction * (leading_edge_final_X - leading_edge_initial_X);
+
+            float h_terrain, nx_terrain, ny_terrain, nz_terrain;
+            getArenaHeightAndNormal(terrain_probe_X, marbleZ, h_terrain, nx_terrain, ny_terrain, nz_terrain);
+
+            bool is_wall_at_probe = (ny_terrain < wall_slope_normal_Y_threshold);
+            // Check if the marble's bottom would go below the terrain height at the probe point
+            bool would_penetrate_wall = (marbleY - R_eff < h_terrain - collision_check_offset); 
+                                       // Using R_eff for consistency with probe, check if marble body hits
+
+            if (is_wall_at_probe && would_penetrate_wall) {
+                // Collision detected. The wall surface is effectively at terrain_probe_X.
+                // 1. Positional Correction:
+                //    Move marble's center so its effective edge is at terrain_probe_X.
+                marbleX = terrain_probe_X - signVX * R_eff;
+
+                // 2. Velocity Reflection:
+                //    Use original velocities for reflection against the normal at the probe point.
+                float v_dot_n_wall = vx_before_x_collision * nx_terrain +
+                                     vy_at_x_collision_check * ny_terrain +
+                                     vz_at_x_collision_check * nz_terrain;
+
+                if (v_dot_n_wall < 0) { // Check if moving into the wall
+                    marbleVX -= (1 + restitution_wall) * v_dot_n_wall * nx_terrain;
+                    marbleVY -= (1 + restitution_wall) * v_dot_n_wall * ny_terrain;
+                    marbleVZ -= (1 + restitution_wall) * v_dot_n_wall * nz_terrain;
+                }
+                collision_handled_X = true;
+                break; // Collision handled for this axis, exit CCD loop
+            }
         }
     }
 
-    // Check Z-direction movement
-    if (marbleVZ != 0.0f) {
-        float potential_next_marbleZ = marbleZ + marbleVZ * deltaTime;
-        float ground_h_at_next_Z, norm_x_at_next_Z, norm_y_at_next_Z, norm_z_at_next_Z;
-        getArenaHeightAndNormal(marbleX, potential_next_marbleZ, ground_h_at_next_Z, norm_x_at_next_Z, norm_y_at_next_Z, norm_z_at_next_Z);
+    // --- Check Z-direction movement ---
+    // (Similar CCD logic would be applied here for Z-axis)
+    // Store velocities at the start of this axis check
+    float vx_at_z_collision_check = marbleVX; // marbleVX might have been changed by X-collision
+    float vy_at_z_collision_check = marbleVY; // marbleVY might have been changed by X-collision
+    float vz_before_z_collision = marbleVZ;
+    bool collision_handled_Z = false;
 
-        bool is_wall_slope_Z = (norm_y_at_next_Z < wall_slope_normal_Y_threshold);
-        bool would_collide_height_Z = (marbleY - marbleRadius < ground_h_at_next_Z - collision_check_offset);
+    if (vz_before_z_collision != 0.0f) {
+        float signVZ = (vz_before_z_collision > 0.0f ? 1.0f : -1.0f);
 
-        if (is_wall_slope_Z && would_collide_height_Z) {
-            marbleVZ = 0.0f; // Stop Z-motion
+        float leading_edge_initial_Z = marbleZ + signVZ * R_eff;
+        float final_center_Z_candidate = marbleZ + vz_before_z_collision * deltaTime;
+        float leading_edge_final_Z = final_center_Z_candidate + signVZ * R_eff;
+
+        for (int i = 0; i <= CCD_SEGMENTS; ++i) {
+            float fraction = (CCD_SEGMENTS == 0) ? 1.0f : (float)i / CCD_SEGMENTS;
+            float terrain_probe_Z = leading_edge_initial_Z + fraction * (leading_edge_final_Z - leading_edge_initial_Z);
+
+            float h_terrain, nx_terrain, ny_terrain, nz_terrain;
+            // Pass marbleX that might have been corrected by X-collision
+            getArenaHeightAndNormal(marbleX, terrain_probe_Z, h_terrain, nx_terrain, ny_terrain, nz_terrain);
+
+            bool is_wall_at_probe = (ny_terrain < wall_slope_normal_Y_threshold);
+            bool would_penetrate_wall = (marbleY - R_eff < h_terrain - collision_check_offset);
+
+            if (is_wall_at_probe && would_penetrate_wall) {
+                marbleZ = terrain_probe_Z - signVZ * R_eff;
+
+                float v_dot_n_wall = vx_at_z_collision_check * nx_terrain + // Use vx_at_z_collision_check
+                                     vy_at_z_collision_check * ny_terrain + // Use vy_at_z_collision_check
+                                     vz_before_z_collision * nz_terrain;
+                if (v_dot_n_wall < 0) {
+                    marbleVX -= (1 + restitution_wall) * v_dot_n_wall * nx_terrain;
+                    marbleVY -= (1 + restitution_wall) * v_dot_n_wall * ny_terrain;
+                    marbleVZ -= (1 + restitution_wall) * v_dot_n_wall * nz_terrain;
+                }
+                collision_handled_Z = true;
+                break;
+            }
         }
     }
 
-    // --- Update Positions --- (marbleVX/VZ might be zeroed now)
+    // --- Update Positions ---
+    // If CCD handled collision, marbleX/Z and marbleVX/VY/VZ are already updated.
+    // This final step applies the (potentially reflected) velocity from the (possibly corrected) position.
     marbleX += marbleVX * deltaTime;
     marbleZ += marbleVZ * deltaTime;
-    marbleY += marbleVY * deltaTime; // Update marbleY using its velocity
+    marbleY += marbleVY * deltaTime;
 
     // --- Collision Response (Ground) ---
-    const float marbleRadius = 0.5f;
+    // Note: marbleRadius is already a global const
     float currentGroundHeight, newNormalX, newNormalY, newNormalZ;
     getArenaHeightAndNormal(marbleX, marbleZ, currentGroundHeight, newNormalX, newNormalY, newNormalZ);
 
     if (marbleY < currentGroundHeight + marbleRadius) {
-        marbleY = currentGroundHeight + marbleRadius;
-        // Simple stop on collision. For bounce, reflect marbleVY based on newNormalY.
-        // float dot_vy_normal = marbleVY * newNormalY; // Simplified for vertical only
-        // if (dot_vy_normal < 0) marbleVY = -dot_vy_normal * restitution_factor; else marbleVY = 0;
-        marbleVY = 0.0f;
-        
-        // Optional: If on ground, can apply stronger friction or adjust horizontal forces
-        // based on newNormalX, newNormalY, newNormalZ.
+        marbleY = currentGroundHeight + marbleRadius; // Correct position
+
+        // Reflect velocity based on ground normal
+        // Velocity V = (marbleVX, marbleVY, marbleVZ)
+        // Normal N = (newNormalX, newNormalY, newNormalZ)
+        float v_dot_n_ground = marbleVX * newNormalX + marbleVY * newNormalY + marbleVZ * newNormalZ;
+
+        if (v_dot_n_ground < 0) { // If moving into the ground
+            marbleVX -= (1 + restitution_ground) * v_dot_n_ground * newNormalX;
+            marbleVY -= (1 + restitution_ground) * v_dot_n_ground * newNormalY;
+            marbleVZ -= (1 + restitution_ground) * v_dot_n_ground * newNormalZ;
+        }
+        // If v_dot_n_ground >= 0, it means the marble is already moving away from or parallel to the surface normal.
+        // The position correction is still important. No reflection needed in this case.
+        // If restitution_ground is 0, this becomes V_new = V - N * dot(V,N), which projects V onto the plane.
     }
 
     // Stop if velocity and acceleration are very small
-    if (fabs(marbleVX) < 0.005f && fabs(accX) < 0.005f) marbleVX = 0.0f;
-    if (fabs(marbleVZ) < 0.005f && fabs(accZ) < 0.005f) marbleVZ = 0.0f;
+    if (fabs(marbleVX) < 0.005f && fabs(accX) < 0.005f) marbleVX = 0.0f; // accX here is from start of frame
+    if (fabs(marbleVZ) < 0.005f && fabs(accZ) < 0.005f) marbleVZ = 0.0f; // accZ here is from start of frame
 }
