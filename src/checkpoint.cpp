@@ -121,4 +121,5 @@ void setupCheckpoints() {
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~buat checkpoint di sini~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     addCheckpoint(0.0f, -BOUNDS + 2.0f);
     addCheckpoint(0.0f, -BOUNDS + 12.0f);
+    addCheckpoint(-6.0f, -BOUNDS + 10.3f);
 }

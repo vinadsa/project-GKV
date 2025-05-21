@@ -114,7 +114,9 @@ void setupArenaGeometry() {
     addRampArea(1.0f, 0.0f, 6.5f, 6.0f, pathBaseHeight - 2.0f, pathBaseHeight + 2.0f, 'z');
     addRampArea(-3.0f, 0.0f, 7.0f, 3.0f, pathBaseHeight + 3.0f, pathBaseHeight + 0.5f, 'x');
     Kubus(0.0f, pathBaseHeight + 1.0f, 0.0f, 5.0f, 1.0f, 10.0f); // Kubus di tengah arena
-    Kubus(-6.0f, pathBaseHeight + 2.0f, 3.0f, 1.0f, 1.0f, 10.0f); 
+    Kubus(-6.0f, pathBaseHeight + 2.0f, 1.0f, 1.0f, 1.0f, 12.0f); 
+    Kubus(-6.0f, pathBaseHeight + 1.0f, 13.0f, 10.0f, 1.0f, 2.0f); 
+    Kubus(-6.0f, pathBaseHeight + 1.3f, 14.0f, 10.0f, 1.0f, 2.0f); //tadahan
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~BATAS PEMBUATAN ARENA~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 }
 
