@@ -111,9 +111,10 @@ void setupArenaGeometry() {
     addFlatArea(0.0f, 0.0f, BOUNDS*2.0f, BOUNDS*2.0f, pathBaseHeight - 2.0f); // pathBaseHeight dari globals.h
 
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~BUAT ARENA DIBAWAH INI~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    addRampArea(1.0f, 0.0f, 6.5f, 10.0f, pathBaseHeight - 2.0f, pathBaseHeight + 2.0f, 'z');
+    addRampArea(1.0f, 0.0f, 6.5f, 6.0f, pathBaseHeight - 2.0f, pathBaseHeight + 2.0f, 'z');
+    addRampArea(-3.0f, 0.0f, 7.0f, 3.0f, pathBaseHeight + 3.0f, pathBaseHeight + 0.5f, 'x');
     Kubus(0.0f, pathBaseHeight + 1.0f, 0.0f, 5.0f, 1.0f, 10.0f); // Kubus di tengah arena
-
+    Kubus(-6.0f, pathBaseHeight + 2.0f, 3.0f, 1.0f, 1.0f, 10.0f); 
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~BATAS PEMBUATAN ARENA~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 }
 
@@ -208,11 +209,19 @@ void getArenaHeightAndNormal(float x, float z, float& outHeight, float& outNorma
 
 // --- Drawing Functions ---
 void drawGround() {
-    // Warna dasar tanah bisa diatur di sini atau per-quad
-    // glColor3f(0.2f, 0.7f, 0.2f); // Contoh warna hijau
-
     float stepX = (2.0f * BOUNDS) / (GRID_SIZE - 1);
     float stepZ = (2.0f * BOUNDS) / (GRID_SIZE - 1);
+
+    // Definisikan warna untuk permukaan atas dan sisi
+    // Warna sisi bisa dibuat lebih gelap atau berbeda
+    float side_color_r = 0.3f; // Contoh: abu-abu gelap untuk sisi
+    float side_color_g = 0.3f;
+    float side_color_b = 0.3f;
+
+    // Threshold untuk perbedaan ketinggian yang menandakan "sisi"
+    // Jika perbedaan ketinggian maksimum dalam satu quad melebihi nilai ini,
+    // quad tersebut dianggap sebagai bagian dari sisi. Sesuaikan nilai ini jika perlu.
+    float side_detection_threshold = 0.75f; // Misalnya, jika beda tinggi > 0.75 unit
 
     glBegin(GL_QUADS);
     for (int i = 0; i < GRID_SIZE - 1; ++i) {
@@ -222,37 +231,60 @@ void drawGround() {
             float x2 = -BOUNDS + (float)(i + 1) * stepX;
             float z2 = -BOUNDS + (float)(j + 1) * stepZ;
 
-            // Ambil ketinggian dari array (bukan dari getArenaHeight secara langsung untuk efisiensi drawing)
             float y11 = arenaHeights[i][j];
             float y21 = arenaHeights[i + 1][j];
             float y22 = arenaHeights[i + 1][j + 1];
             float y12 = arenaHeights[i][j + 1];
 
-            // Pewarnaan berdasarkan ketinggian rata-rata quad
-            float avg_height = (y11 + y12 + y21 + y22) / 4.0f;
-            // Batas visual untuk pewarnaan (bisa disesuaikan atau diambil dari globals.h)
-            float lowest_viz_height = defaultFallingHeight; // Ketinggian terendah yang terlihat
-            float highest_viz_height = pathBaseHeight + 5.0f; // Perkiraan ketinggian tertinggi yang mungkin untuk pewarnaan
-            float height_range = highest_viz_height - lowest_viz_height;
-            if (height_range <= 0) height_range = 1.0f; // Hindari pembagian dengan nol
+            // Hitung perbedaan ketinggian maksimum di dalam quad
+            float max_h_diff = 0.0f;
+            max_h_diff = fmax(max_h_diff, fabs(y11 - y21)); // Tepi sepanjang X
+            max_h_diff = fmax(max_h_diff, fabs(y12 - y22)); // Tepi sepanjang X lainnya
+            max_h_diff = fmax(max_h_diff, fabs(y11 - y12)); // Tepi sepanjang Z
+            max_h_diff = fmax(max_h_diff, fabs(y21 - y22)); // Tepi sepanjang Z lainnya
 
-            float color_factor = clamp((avg_height - lowest_viz_height) / height_range, 0.0f, 1.0f);
+            bool is_side_quad = (max_h_diff > side_detection_threshold);
 
-            // Skema warna (misalnya, dari coklat ke hijau muda)
-            glColor3f(
-                0.4f - color_factor * 0.2f, // Merah: lebih sedikit saat lebih tinggi
-                0.3f + color_factor * 0.4f, // Hijau: lebih banyak saat lebih tinggi
-                0.2f                        // Biru: konstan atau sedikit variasi
-            );
+            // Hitung normal untuk pencahayaan (opsional tapi meningkatkan visual)
+            // Vektor untuk dua sisi segitiga pertama dari quad: (P0, P1, P3) -> P0(x1,y11,z1), P1(x1,y12,z2), P3(x2,y21,z1)
+            float v1x = 0;          float v1y = y12 - y11; float v1z = z2 - z1; // P1 - P0
+            float v2x = x2 - x1;    float v2y = y21 - y11; float v2z = 0;       // P3 - P0
+            
+            float nx = v1y * v2z - v1z * v2y;
+            float ny = v1z * v2x - v1x * v2z;
+            float nz = v1x * v2y - v1y * v2x;
 
-            // Gambar quad
-            // Normal bisa dihitung per-vertex untuk shading yang lebih baik jika diinginkan,
-            // tapi untuk sekarang kita gunakan pewarnaan flat per-quad.
-            // Untuk shading Gouraud/Phong, Anda perlu menghitung normal di setiap vertex.
-            // glNormal3f(...); // Jika menggunakan lighting per vertex
+            // Normalisasi normal
+            float len = sqrt(nx * nx + ny * ny + nz * nz);
+            if (len > 1e-6) { // Hindari pembagian dengan nol
+                nx /= len;
+                ny /= len;
+                nz /= len;
+            }
+            glNormal3f(nx, ny, nz);
+
+
+            if (is_side_quad) {
+                // Warna untuk sisi
+                glColor3f(side_color_r, side_color_g, side_color_b);
+            } else {
+                // Warna untuk permukaan atas (menggunakan logika pewarnaan berdasarkan ketinggian yang sudah ada)
+                float avg_height = (y11 + y12 + y21 + y22) / 4.0f;
+                float lowest_viz_height = defaultFallingHeight; 
+                // Sesuaikan highest_viz_height agar rentang warna pada permukaan atas terlihat bagus
+                float highest_viz_height = pathBaseHeight + 3.0f; // Contoh, bisa disesuaikan
+                
+                float color_factor = (avg_height - lowest_viz_height) / (highest_viz_height - lowest_viz_height);
+                color_factor = clamp(color_factor, 0.0f, 1.0f);
+
+                // Skema warna yang sudah ada untuk permukaan atas
+                glColor3f(0.2f + color_factor * 0.6f, 
+                          0.7f - color_factor * 0.4f, 
+                          0.2f + color_factor * 0.2f);
+            }
 
             glVertex3f(x1, y11, z1);
-            glVertex3f(x1, y12, z2); // Urutan vertex penting untuk orientasi permukaan
+            glVertex3f(x1, y12, z2);
             glVertex3f(x2, y22, z2);
             glVertex3f(x2, y21, z1);
         }
