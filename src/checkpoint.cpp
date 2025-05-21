@@ -119,7 +119,7 @@ void setupCheckpoints() {
     // Ensure BOUNDS is accessible if used directly or pass it if it's not global from globals.h
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~buat checkpoint di sini~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    addCheckpoint(0.0f, -BOUNDS + 2.0f);
-    addCheckpoint(0.0f, -BOUNDS + 12.0f);
-    addCheckpoint(-6.0f, -BOUNDS + 10.3f);
+    addCheckpoint(0.0f, -8.0f);
+    addCheckpoint(0.0f, -4.0f);
+    addCheckpoint(-6.0f, -4.5f);
 }
