@@ -16,12 +16,6 @@ float arenaMinZ = -BOUNDS;
 float arenaMaxZ = BOUNDS;
 float arenaFloorY = 0.0f;  // Floor level di koordinat 0
 
-void initArena() {
-    worldCubes.clear();
-    worldTriangles.clear();
-    worldPlatforms.clear();
-}
-
 // --- 3D Object Creation Functions ---
 void addCube3D(float x, float y, float z, float width, float height, float depth, float r, float g, float b) {
     Cube3D cube = {x, y, z, width, height, depth, r, g, b};

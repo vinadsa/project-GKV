@@ -15,7 +15,7 @@ struct GLUquadric;
 // --- Global Constants ---
 // Arena constants
 const int GRID_SIZE = 150;          // Definisikan GRID_SIZE di sini
-const float BOUNDS = 30.0f;
+const float BOUNDS = 50.0f;
 const float minGroundHeight = -20.0f; // Threshold for falling out of bounds
 const float defaultFallingHeight = -8.0f;
 const float pathBaseHeight = 0.5f;
@@ -38,6 +38,10 @@ const float marbleRadius = 0.5f; // Define marble radius globally
 // Restitution constants (bounciness)
 const float restitution_ground = 0.5f; // How much energy is kept on ground bounce (0=no bounce, 1=perfect bounce)
 const float restitution_wall = 0.4f;   // How much energy is kept on wall bounce
+
+// Jump/height constraints - Batasan ketinggian untuk marble
+const float maxJumpHeight = 1.0f;      // Maksimum tinggi yang bisa dicapai marble secara natural
+const float platformHeightThreshold = 0.8f; // Batas tinggi platform yang bisa diakses tanpa ramp
 
 // --- Extern Global Variables ---
 // Marble position and velocity
@@ -67,6 +71,37 @@ extern float arenaHeights[GRID_SIZE][GRID_SIZE];
 struct Vec3 {
     float x, y, z;
 };
+
+// 3D Geometry structures untuk arena baru
+struct Cube3D {
+    float x, y, z;      // Center position
+    float width, height, depth;
+    float r, g, b;      // Color
+};
+
+struct Triangle3D {
+    float x1, y1, z1;  // Vertex 1
+    float x2, y2, z2;  // Vertex 2
+    float x3, y3, z3;  // Vertex 3
+    float r, g, b;      // Color
+};
+
+struct Platform {
+    float x, y, z;      // Center position
+    float width, depth; // Ukuran platform
+    float height;       // Ketinggian platform
+    float r, g, b;      // Color
+};
+
+// Global containers untuk objek 3D
+extern std::vector<Cube3D> worldCubes;
+extern std::vector<Triangle3D> worldTriangles;
+extern std::vector<Platform> worldPlatforms;
+
+// Arena bounds untuk collision detection
+extern float arenaMinX, arenaMaxX;
+extern float arenaMinZ, arenaMaxZ;
+extern float arenaFloorY;
 
 extern std::vector<Vec3> checkpoints;
 extern int activeCheckpointIndex;
