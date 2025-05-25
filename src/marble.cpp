@@ -33,11 +33,11 @@ void drawMarble() {
         // For textured marble: disable GL_COLOR_MATERIAL temporarily to use explicit materials
         glDisable(GL_COLOR_MATERIAL);
         
-        // Set neutral material properties for textured marble
-        GLfloat marble_ambient[] = {0.4f, 0.4f, 0.4f, 1.0f};    // Neutral ambient
+        // Set material properties that preserve texture visibility
+        GLfloat marble_ambient[] = {0.6f, 0.6f, 0.6f, 1.0f};    // Higher ambient to preserve texture
         GLfloat marble_diffuse[] = {1.0f, 1.0f, 1.0f, 1.0f};    // White diffuse for pure texture colors
-        GLfloat marble_specular[] = {0.6f, 0.6f, 0.6f, 1.0f};   // Neutral specular for shininess
-        GLfloat marble_shininess = 50.0f;                        // Moderate shininess
+        GLfloat marble_specular[] = {0.3f, 0.3f, 0.3f, 1.0f};   // Reduced specular to prevent washout
+        GLfloat marble_shininess = 30.0f;                        // Lower shininess
         
         glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, marble_ambient);
         glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, marble_diffuse);
