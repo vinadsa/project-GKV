@@ -29,23 +29,42 @@ void drawMarble() {
         totalRotationAngleZ += deltaAngleZ;
     }
     glRotatef(totalRotationAngleX, 1.0f, 0.0f, 0.0f);
-    glRotatef(totalRotationAngleZ, 0.0f, 0.0f, 1.0f);
-
-    if (marbleTextureID != 0 && sphereQuadric != nullptr) {
+    glRotatef(totalRotationAngleZ, 0.0f, 0.0f, 1.0f);    if (marbleTextureID != 0 && sphereQuadric != nullptr) {
+        // For textured marble: disable GL_COLOR_MATERIAL temporarily to use explicit materials
+        glDisable(GL_COLOR_MATERIAL);
+        
+        // Set material properties that preserve texture visibility
+        GLfloat marble_ambient[] = {0.6f, 0.6f, 0.6f, 1.0f};    // Higher ambient to preserve texture
+        GLfloat marble_diffuse[] = {1.0f, 1.0f, 1.0f, 1.0f};    // White diffuse for pure texture colors
+        GLfloat marble_specular[] = {0.3f, 0.3f, 0.3f, 1.0f};   // Reduced specular to prevent washout
+        GLfloat marble_shininess = 30.0f;                        // Lower shininess
+        
+        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, marble_ambient);
+        glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, marble_diffuse);
+        glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, marble_specular);
+        glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, marble_shininess);
+        
         glEnable(GL_TEXTURE_2D);
         glBindTexture(GL_TEXTURE_2D, marbleTextureID);
-
-        // Set material color to white if GL_COLOR_MATERIAL is enabled,
-        // so texture colors are not tinted by the current glColor.
-        glColor3f(1.0f, 1.0f, 1.0f);
 
         gluSphere(sphereQuadric, 0.5, 32, 32); // Draw sphere with texture
 
         glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture
         glDisable(GL_TEXTURE_2D);
+        
+        // Re-enable GL_COLOR_MATERIAL for other objects
+        glEnable(GL_COLOR_MATERIAL);
     } else {
-        // Fallback to untextured sphere if texture loading failed or quadric not available
-        glColor3f(1.0f, 0.1f, 0.1f); // Original color
+        // For untextured marble: use GL_COLOR_MATERIAL with glColor
+        glColor3f(0.9f, 0.7f, 0.5f); // Marble-like color (this will set ambient and diffuse due to GL_COLOR_MATERIAL)
+        
+        // Set only specular and shininess explicitly
+        GLfloat marble_specular[] = {1.0f, 1.0f, 1.0f, 1.0f};   // High specular for shininess
+        GLfloat marble_shininess = 80.0f;                        // High shininess value
+        
+        glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, marble_specular);
+        glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, marble_shininess);
+        
         glutSolidSphere(0.5, 32, 32);
     }
 

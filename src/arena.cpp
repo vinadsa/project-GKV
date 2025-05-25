@@ -87,9 +87,7 @@ void Kubus(float centerX, float centerY, float centerZ, float sizeX, float sizeY
 
     for (int i = start_i; i <= end_i; ++i) {
         for (int j = start_j; j <= end_j; ++j) {
-            // Set ketinggian grid di bawah kubus ke permukaan atas kubus
-            // Ini akan membuat bola menggelinding di atasnya dan "terhalang" oleh sisinya
-            // jika area di sekitarnya lebih rendah.
+
             arenaHeights[i][j] = topSurfaceHeight;
         }
     }
@@ -103,11 +101,6 @@ void setupArenaGeometry() {
         }
     }
 
-    // 2. Hapus pembuatan arena lama (panggilan ke addFlatArea dan addRampArea yang sebelumnya ada di sini)
-    //    Arena sekarang akan dibangun menggunakan fungsi Kubus atau fungsi kustom lainnya.
-
-    // 3. Contoh penggunaan fungsi Kubus:
-    // Membuat platform awal yang datar sebagai alas
     addFlatArea(0.0f, 0.0f, BOUNDS*2.0f, BOUNDS*2.0f, pathBaseHeight - 2.0f); // pathBaseHeight dari globals.h
 
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~BUAT ARENA DIBAWAH INI~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -160,29 +153,12 @@ void getArenaHeightAndNormal(float x, float z, float& outHeight, float& outNorma
     float h_dx = getArenaHeight(x + epsilon, z); // Ketinggian di (x+eps, z)
     float h_dz = getArenaHeight(x, z + epsilon); // Ketinggian di (x, z+eps)
 
-    // Vektor tangen pertama (arah x): (epsilon, h_dx - h_center, 0)
-    // Vektor tangen kedua (arah z): (0, h_dz - h_center, epsilon)
-    // Normal adalah hasil cross product dari tangen_z X tangen_x (atau sebaliknya dengan penyesuaian tanda)
-    // (TangenZ.y * TangenX.z - TangenZ.z * TangenX.y) -> (h_dz - h_center) * 0 - epsilon * 0 = 0 (ini salah)
-    // Perhitungan normal yang lebih umum:
-    // Vektor P1 = (x, h_center, z)
-    // Vektor P2 = (x + epsilon, h_dx, z)
-    // Vektor P3 = (x, h_dz, z + epsilon)
-    // Vektor U = P2 - P1 = (epsilon, h_dx - h_center, 0)
-    // Vektor V = P3 - P1 = (0, h_dz - h_center, epsilon)
-    // Normal N = U x V
+
     outNormalX = (h_dx - h_center) * epsilon; // Komponen Y dari U * Komponen Z dari V (0*epsilon) - Komponen Z dari U * Komponen Y dari V (0*(h_dz-h_center)) -> ini salah
                  // Seharusnya: Uy*Vz - Uz*Vy = (h_dx - h_center) * epsilon - 0 * (h_dz - h_center)
     outNormalY = epsilon * epsilon; // Uz*Vx - Ux*Vz = 0*0 - epsilon*epsilon
     outNormalZ = -(h_dz - h_center) * epsilon; // Ux*Vy - Uy*Vx = epsilon*(h_dz-h_center) - (h_dx-h_center)*0
 
-    // Koreksi perhitungan normal (dari kode sebelumnya yang tampaknya lebih standar untuk heightmap)
-    // Normal dari (P(x+dx,z) - P(x,z)) x (P(x,z+dz) - P(x,z))
-    // (dx, height(x+dx,z)-height(x,z), 0)
-    // (0, height(x,z+dz)-height(x,z), dz)
-    // Nx = (height(x+dx,z)-height(x,z)) * dz
-    // Ny = dx*dz (jika dx dan dz adalah epsilon)
-    // Nz = -(height(x,z+dz)-height(x,z)) * dx
 
     outNormalX = -(h_dx - h_center); // Mengasumsikan dz adalah epsilon, ini adalah komponen dy untuk perubahan dx
     outNormalY = epsilon;            // Komponen "up"
@@ -214,10 +190,21 @@ void drawGround() {
     float stepX = (2.0f * BOUNDS) / (GRID_SIZE - 1);
     float stepZ = (2.0f * BOUNDS) / (GRID_SIZE - 1);
 
+    // Set arena material properties for better lighting
+    GLfloat arena_ambient[] = {0.2f, 0.2f, 0.25f, 1.0f};   // Cool ambient
+    GLfloat arena_diffuse[] = {0.6f, 0.6f, 0.7f, 1.0f};    // Base arena color
+    GLfloat arena_specular[] = {0.1f, 0.1f, 0.2f, 1.0f};   // Low specular for matte finish
+    GLfloat arena_shininess = 10.0f;                        // Low shininess
+    
+    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, arena_ambient);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, arena_diffuse);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, arena_specular);
+    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, arena_shininess);
+
     // Definisikan warna untuk permukaan atas dan sisi
     // Warna sisi bisa dibuat lebih gelap atau berbeda
-    float side_color_r = 0.3f; // Contoh: abu-abu gelap untuk sisi
-    float side_color_g = 0.3f;
+    float side_color_r = 0.25f; // Darker for sides
+    float side_color_g = 0.25f;
     float side_color_b = 0.3f;
 
     // Threshold untuk perbedaan ketinggian yang menandakan "sisi"
@@ -263,14 +250,27 @@ void drawGround() {
                 ny /= len;
                 nz /= len;
             }
-            glNormal3f(nx, ny, nz);
-
-
-            if (is_side_quad) {
-                // Warna untuk sisi
+            glNormal3f(nx, ny, nz);            if (is_side_quad) {
+                // Set darker material for sides with slightly more specular reflection
+                GLfloat side_ambient[] = {0.15f, 0.15f, 0.2f, 1.0f};
+                GLfloat side_diffuse[] = {side_color_r, side_color_g, side_color_b, 1.0f};
+                GLfloat side_specular[] = {0.2f, 0.2f, 0.3f, 1.0f};
+                GLfloat side_shininess = 20.0f;
+                
+                glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, side_ambient);
+                glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, side_diffuse);
+                glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, side_specular);
+                glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, side_shininess);
+                
                 glColor3f(side_color_r, side_color_g, side_color_b);
             } else {
-                // Warna untuk permukaan atas (menggunakan logika pewarnaan berdasarkan ketinggian yang sudah ada)
+                // Reset material for top surfaces
+                glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, arena_ambient);
+                glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, arena_diffuse);
+                glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, arena_specular);
+                glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, arena_shininess);
+                
+                // Enhanced color calculation for permukaan atas with better lighting
                 float avg_height = (y11 + y12 + y21 + y22) / 4.0f;
                 float lowest_viz_height = defaultFallingHeight; 
                 // Sesuaikan highest_viz_height agar rentang warna pada permukaan atas terlihat bagus
@@ -279,10 +279,12 @@ void drawGround() {
                 float color_factor = (avg_height - lowest_viz_height) / (highest_viz_height - lowest_viz_height);
                 color_factor = clamp(color_factor, 0.0f, 1.0f);
 
-                // Skema warna yang sudah ada untuk permukaan atas
-                glColor3f(0.2f + color_factor * 0.6f, 
-                          0.7f - color_factor * 0.4f, 
-                          0.2f + color_factor * 0.2f);
+                // Enhanced color scheme with better contrast for lighting
+                float r = 0.3f + color_factor * 0.5f;  // Green to yellow-brown transition
+                float g = 0.6f - color_factor * 0.2f;  // Maintain some green
+                float b = 0.2f + color_factor * 0.3f;  // Add warmth at higher elevations
+                
+                glColor3f(r, g, b);
             }
 
             glVertex3f(x1, y11, z1);

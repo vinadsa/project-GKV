@@ -19,6 +19,35 @@
 GLuint marbleTextureID = 0; // Initialize to 0 (no texture)
 GLUquadric* sphereQuadric = nullptr;
 
+// Dynamic lighting function that updates light positions based on marble position
+void updateDynamicLighting() {
+    // Update rim light to follow marble for better highlighting
+    GLfloat light2_pos[] = {marbleX, marbleY + 15.0f, marbleZ - 20.0f, 1.0f};
+    glLightfv(GL_LIGHT2, GL_POSITION, light2_pos);
+      // Optional: Add subtle movement to fill light for more dynamic shadows
+    static float lightTime = 0.0f;
+    lightTime += 0.01f;
+    GLfloat light1_pos[] = {
+        -30.0f + 10.0f * sinf(lightTime * 0.5f), 
+        40.0f + 5.0f * cosf(lightTime * 0.3f), 
+        -20.0f + 8.0f * sinf(lightTime * 0.4f), 
+        1.0f
+    };
+    glLightfv(GL_LIGHT1, GL_POSITION, light1_pos);
+      // Add subtle intensity variation to make lighting more dynamic
+    static float intensityTime = 0.0f;
+    intensityTime += 0.005f;
+      // Vary the main light intensity slightly for a more natural feel (reduced variation)
+    float intensityVariation = 0.95f + 0.05f * sinf(intensityTime); // Much smaller variation
+    GLfloat light0_diffuse[] = {
+        0.7f * intensityVariation, 
+        0.65f * intensityVariation, 
+        0.6f * intensityVariation, 
+        1.0f
+    };
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, light0_diffuse);
+}
+
 // Function to load a texture
 bool loadTexture(const char* filename, GLuint& textureID_ref) {
     int width, height, channels;
@@ -78,17 +107,16 @@ void display() {
     // The camera orbits around the target point.
     float eyeX = targetX + cameraDistance * cos(camAngleYRad) * sin(camAngleXRad);
     float eyeY = targetY + cameraDistance * sin(camAngleYRad);
-    float eyeZ = targetZ + cameraDistance * cos(camAngleYRad) * cos(camAngleXRad);
-
-    // Ensure camera doesn't go below a certain height relative to the target or absolute minimum
+    float eyeZ = targetZ + cameraDistance * cos(camAngleYRad) * cos(camAngleXRad);    // Ensure camera doesn't go below a certain height relative to the target or absolute minimum
     // This can prevent clipping into the marble or ground if cameraAngleY is too steep.
-    // Example: if (eyeY < targetY + 0.2f) eyeY = targetY + 0.2f; // Keep camera slightly above target Y
-    // Example: if (eyeY < 0.1f) eyeY = 0.1f; // Absolute minimum camera height
-
-
+    if (eyeY < targetY + 0.2f) eyeY = targetY + 0.2f; // Keep camera slightly above target Y
+    if (eyeY < 0.1f) eyeY = 0.1f; // Absolute minimum camera heightY < 0.1f) eyeY = 0.1f; // Absolute minimum camera height
     gluLookAt(eyeX, eyeY, eyeZ,
               targetX, targetY, targetZ,
               0.0, 1.0, 0.0); // Up vector
+
+    // Update dynamic lighting based on marble position
+    updateDynamicLighting();
 
     drawGround();
     drawMarble();
@@ -122,19 +150,67 @@ void timer(int value) {
 void initGraphics() {
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_LIGHTING);
-    glEnable(GL_LIGHT0);
     glEnable(GL_COLOR_MATERIAL);
-    // If GL_COLOR_MATERIAL is enabled, glColor3f(1,1,1) should be set before drawing
-    // textured objects for the texture to appear with its original colors.
-
-    GLfloat light_pos[] = {0.0f, 30.0f, 30.0f, 1.0f};
-    glLightfv(GL_LIGHT0, GL_POSITION, light_pos);
-    GLfloat ambient[] = {0.4f, 0.4f, 0.4f, 1.0f};
-    glLightfv(GL_LIGHT0, GL_AMBIENT, ambient);
-    GLfloat diffuse[] = {0.7f, 0.7f, 0.7f, 1.0f};
-    glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse);
-
-    glClearColor(0.5f, 0.8f, 1.0f, 1.0f); // Sky blue
+    glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
+    
+    // Enable smooth shading for better lighting quality
+    glShadeModel(GL_SMOOTH);
+      // Set global ambient light (reduced to preserve texture visibility)
+    GLfloat globalAmbient[] = {0.15f, 0.15f, 0.2f, 1.0f}; // Lower ambient light
+    glLightModelfv(GL_LIGHT_MODEL_AMBIENT, globalAmbient);
+    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE); // Two-sided lighting
+    
+    // Main directional light (sun-like) - reduced intensity
+    glEnable(GL_LIGHT0);
+    GLfloat light0_pos[] = {50.0f, 80.0f, 30.0f, 0.0f}; // Directional light (w=0)
+    GLfloat light0_ambient[] = {0.1f, 0.1f, 0.1f, 1.0f}; // Reduced ambient
+    GLfloat light0_diffuse[] = {0.7f, 0.65f, 0.6f, 1.0f}; // Reduced warm sunlight
+    GLfloat light0_specular[] = {0.8f, 0.8f, 0.8f, 1.0f}; // Reduced specular
+    glLightfv(GL_LIGHT0, GL_POSITION, light0_pos);
+    glLightfv(GL_LIGHT0, GL_AMBIENT, light0_ambient);
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, light0_diffuse);
+    glLightfv(GL_LIGHT0, GL_SPECULAR, light0_specular);
+    
+    // Secondary fill light (point light for softer shadows) - reduced intensity
+    glEnable(GL_LIGHT1);
+    GLfloat light1_pos[] = {-30.0f, 40.0f, -20.0f, 1.0f}; // Point light (w=1)
+    GLfloat light1_ambient[] = {0.05f, 0.05f, 0.08f, 1.0f};
+    GLfloat light1_diffuse[] = {0.25f, 0.3f, 0.4f, 1.0f}; // Reduced cool fill light
+    GLfloat light1_specular[] = {0.2f, 0.2f, 0.25f, 1.0f};
+    glLightfv(GL_LIGHT1, GL_POSITION, light1_pos);
+    glLightfv(GL_LIGHT1, GL_AMBIENT, light1_ambient);
+    glLightfv(GL_LIGHT1, GL_DIFFUSE, light1_diffuse);
+    glLightfv(GL_LIGHT1, GL_SPECULAR, light1_specular);
+    
+    // Set light attenuation for point light
+    glLightf(GL_LIGHT1, GL_CONSTANT_ATTENUATION, 1.0f);
+    glLightf(GL_LIGHT1, GL_LINEAR_ATTENUATION, 0.002f);
+    glLightf(GL_LIGHT1, GL_QUADRATIC_ATTENUATION, 0.0001f);
+    
+    // Rim light for marble highlighting - much more subtle
+    glEnable(GL_LIGHT2);
+    GLfloat light2_pos[] = {0.0f, 20.0f, -50.0f, 1.0f}; // Behind and above
+    GLfloat light2_ambient[] = {0.02f, 0.02f, 0.05f, 1.0f};
+    GLfloat light2_diffuse[] = {0.15f, 0.2f, 0.3f, 1.0f}; // Much more subtle rim light
+    GLfloat light2_specular[] = {0.4f, 0.45f, 0.5f, 1.0f}; // Reduced specular
+    glLightfv(GL_LIGHT2, GL_POSITION, light2_pos);
+    glLightfv(GL_LIGHT2, GL_AMBIENT, light2_ambient);
+    glLightfv(GL_LIGHT2, GL_DIFFUSE, light2_diffuse);
+    glLightfv(GL_LIGHT2, GL_SPECULAR, light2_specular);
+    
+    // Enable automatic normal normalization (important for scaled objects)
+    glEnable(GL_NORMALIZE);
+    
+    // Add fog for atmospheric effect
+    glEnable(GL_FOG);
+    GLfloat fogColor[] = {0.4f, 0.7f, 0.9f, 1.0f}; // Match sky color
+    glFogfv(GL_FOG_COLOR, fogColor);
+    glFogf(GL_FOG_MODE, GL_LINEAR);
+    glFogf(GL_FOG_START, 50.0f);  // Fog starts at distance 50
+    glFogf(GL_FOG_END, 200.0f);   // Fog is fully opaque at distance 200
+    glFogf(GL_FOG_DENSITY, 0.02f); // Fog density (used with GL_EXP/GL_EXP2)
+    
+    glClearColor(0.4f, 0.7f, 0.9f, 1.0f); // Slightly darker sky blue for better contrast
 
     // Load marble texture
     // Ensure the path is correct relative to your executable's working directory
