@@ -20,7 +20,7 @@ void resetTimer() {
 
 void startTimer() {
     if (!isRunning) {
-        startTime = std::chrono::high_resolution_clock::now() - elapsedSeconds;
+        startTime = std::chrono::high_resolution_clock::now() - std::chrono::duration_cast<std::chrono::high_resolution_clock::duration>(elapsedSeconds);
         isRunning = true;
     }
 }
