@@ -1,4 +1,4 @@
-g++ main.cpp utils.cpp arena.cpp marble.cpp physics.cpp camera.cpp input.cpp checkpoint.cpp graphics.cpp -o MarbleGame -lglfw3 -lglew32 -lfreeglut -lglu32 -lopengl32
+g++ main.cpp utils.cpp arena.cpp marble.cpp physics.cpp camera.cpp input.cpp checkpoint.cpp graphics.cpp stb_loader.c -o MarbleGame -lglfw3 -lglew32 -lfreeglut -lglu32 -lopengl32
 
 Warning: baru bisa di laptop tio( kalo ada yang bisa selain gw apus aja ini warningnya )
 
