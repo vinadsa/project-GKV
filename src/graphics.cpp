@@ -6,6 +6,7 @@
 #include "physics.h"  // For updatePhysics
 #include "utils.h"    // For degToRad
 #include "checkpoint.h" // For drawCheckpoints
+#include "timer.h"      // Added for timer functionality
 #include <GL/glut.h>
 #include <GL/glu.h>   // For gluSphere, GLUquadric, gluBuild2DMipmaps
 #include <cmath>     // For cos, sin
@@ -92,6 +93,12 @@ void display() {
     drawGround();
     drawMarble();
     drawCheckpoints();
+
+    // Display the timer
+    int screenWidth = glutGet(GLUT_WINDOW_WIDTH);
+    int screenHeight = glutGet(GLUT_WINDOW_HEIGHT);
+    displayTimer(screenWidth, screenHeight);
+
     glutSwapBuffers();
 }
 
@@ -107,6 +114,7 @@ void reshape(int w, int h) {
 
 void timer(int value) {
     updatePhysics();
+    updateTimer(); // Add this line to update the timer every frame
     glutPostRedisplay();
     glutTimerFunc(16, timer, 0); // ~60 FPS
 }

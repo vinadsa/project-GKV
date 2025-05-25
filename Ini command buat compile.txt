@@ -3,3 +3,5 @@ g++ main.cpp utils.cpp arena.cpp marble.cpp physics.cpp camera.cpp input.cpp che
 Warning: baru bisa di laptop tio( kalo ada yang bisa selain gw apus aja ini warningnya )
 
 Note: Kemungkinan besar cuma perlu ditambahin nama file (exp: filebaru.cpp) kalo ada file baru!
+
+g++ main.cpp utils.cpp arena.cpp marble.cpp physics.cpp camera.cpp input.cpp checkpoint.cpp graphics.cpp stb_loader.c -o MarbleGame -lglfw3 -lglew32 -lfreeglut -lglu32 -lopengl32

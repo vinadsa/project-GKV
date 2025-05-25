@@ -2,18 +2,30 @@
     "version": "0.2.0",
     "configurations": [
       {
-        "name": "Build and Run with Launcher",
+        "name": "Build and Run with Launcher (Original)",
         "type": "cppdbg",
         "request": "launch",
-        "preLaunchTask": "builder",
+        "preLaunchTask": "builder", // Verify this task name or change to "C/C++: g++.exe build active file"
         "program": "C:\\MinGW\\bin\\launcher.exe",
         "args": [
-          "${fileDirname}/output/${fileBasenameNoExtension}.exe"
+          "${fileDirname}/output/${fileBasenameNoExtension}.exe" // Potential path issue
         ],
         "cwd": "${fileDirname}",
         "externalConsole": true,
         "stopAtEntry": false,
         "MIMode": "gdb"
+      },
+      {
+        "name": "Run MarbleGame Directly",
+        "type": "cppdbg",
+        "request": "launch",
+        "program": "${workspaceFolder}/src/MarbleGame.exe", // Adjust if your exe name is different
+        "args": [],
+        "stopAtEntry": false,
+        "cwd": "${workspaceFolder}/src", // Set CWD to where textures/marble_texture.png is relative
+        "externalConsole": true,
+        "MIMode": "gdb",
+        "preLaunchTask": "C/C++: g++.exe build active file" // Ensure this matches your build task label
       }
     ]
   }

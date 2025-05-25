@@ -9,6 +9,7 @@
 #include "input.h"
 #include "checkpoint.h"
 #include "graphics.h"     // For display, reshape, timer, initGraphics
+#include "timer.h"        // Added for timer functionality
 
 void initGame() {
     initKeyStates();         // Initialize keyboard states
@@ -18,6 +19,8 @@ void initGame() {
     activeCheckpointIndex = -1; // Ensure we start fresh with checkpoints
     resetMarble();           // Reset marble to the first checkpoint (or defined start)
     initGraphics();          // Initialize OpenGL specific settings (lighting, depth test, etc.)
+    resetTimer();            // Reset the timer
+    startTimer();            // Start the timer
 }
 
 
