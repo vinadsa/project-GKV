@@ -74,14 +74,37 @@ void displayTimer(int screenWidth, int screenHeight) {
     // Set text color (e.g., white)
     glColor3f(1.0f, 1.0f, 1.0f);
 
-    // Position the text (e.g., top-left corner)
+    // Position and display the main timer
     // Adjust x and y for desired placement. (0,0) is bottom-left.
     // For top-left, you might use (10, screenHeight - 20) or similar.
-    glRasterPos2i(10, screenHeight - 30); // Adjust Y for font size and margin
+    int mainTimerYPosition = screenHeight - 30;
+    glRasterPos2i(10, mainTimerYPosition); // Adjust Y for font size and margin
 
     char* timeStr = getElapsedTimeString();
     for (char* c = timeStr; *c != '\0'; c++) {
         glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *c); // Or another GLUT font
+    }
+
+    // Display checkpoint times
+    std::vector<std::string> checkpointStrings = getFormattedCheckpointTimes();
+    int checkpointYPosition = mainTimerYPosition - 20; // Start 20 pixels below the main timer
+
+    if (!checkpointStrings.empty()) {
+        // Optional: Display a header for checkpoints
+        glRasterPos2i(10, checkpointYPosition);
+        std::string checkpointHeader = "Checkpoints:";
+        for (char ch : checkpointHeader) {
+            glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, ch);
+        }
+        checkpointYPosition -= 20; // Move down for the first checkpoint time
+
+        for (const std::string& cptStr : checkpointStrings) {
+            glRasterPos2i(10, checkpointYPosition);
+            for (char ch : cptStr) {
+                glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, ch);
+            }
+            checkpointYPosition -= 20; // Move down for the next checkpoint time
+        }
     }
 
     // Restore previous state

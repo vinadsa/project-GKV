@@ -1,6 +1,9 @@
 #ifndef TIMER_H
 #define TIMER_H
 
+#include <vector> // Required for std::vector
+#include <string> // Required for std::string
+
 // Call this once at the beginning of your game or when you want to reset the timer
 void resetTimer();
 
@@ -20,5 +23,10 @@ void displayTimer(int screenWidth, int screenHeight);
 // Gets the elapsed time as a formatted string (e.g., "MM:SS.mmm")
 // Note: The returned string is a pointer to a static buffer, so use it or copy it immediately.
 char* getElapsedTimeString();
+
+// New functions for checkpoint timing
+void recordCheckpointTime();
+const std::vector<double>& getCheckpointTimes(); // Returns a const reference to the vector of checkpoint times
+std::vector<std::string> getFormattedCheckpointTimes(); // Returns formatted checkpoint times
 
 #endif // TIMER_H
