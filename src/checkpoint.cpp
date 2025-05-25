@@ -57,22 +57,39 @@ void drawCheckpoints() {
         // Radius visual checkpoint adalah setengah dari radius bola pemain
         float visualCheckpointRadius = marbleRadius * 0.5f;
         // Y efektif untuk visual checkpoint (pusat bola checkpoint)
-        float cpEffectiveY = cpGroundH + visualCheckpointRadius;
-
-        glPushMatrix();
+        float cpEffectiveY = cpGroundH + visualCheckpointRadius;        glPushMatrix();
         glTranslatef(cp_data.x, cpEffectiveY, cp_data.z);
 
+        // Set material properties for checkpoints
+        GLfloat cp_ambient[4], cp_diffuse[4], cp_specular[4];
+        GLfloat cp_shininess;
+        
         if ((int)i > activeCheckpointIndex) {
-            // Checkpoint belum diambil: warna kuning solid
-            glEnable(GL_BLEND); // Nonaktifkan blending untuk warna solid
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // Atur fungsi blending
-            glColor4f(1.0f, 1.0f, 0.0f, 0.5f); // Kuning solid dengan alpha 0.5
-        } else {
-            // Checkpoint sudah diambil: transparan
+            // Checkpoint belum diambil: material kuning berkilau
+            cp_ambient[0] = 0.3f; cp_ambient[1] = 0.3f; cp_ambient[2] = 0.0f; cp_ambient[3] = 0.8f;
+            cp_diffuse[0] = 1.0f; cp_diffuse[1] = 1.0f; cp_diffuse[2] = 0.0f; cp_diffuse[3] = 0.8f;
+            cp_specular[0] = 1.0f; cp_specular[1] = 1.0f; cp_specular[2] = 0.5f; cp_specular[3] = 0.8f;
+            cp_shininess = 60.0f;
+            
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            glColor4f(0.6f, 0.6f, 0.6f, 0.25f); // Abu-abu dengan alpha 0.25 (cukup transparan)
+            glColor4f(1.0f, 1.0f, 0.0f, 0.8f); // Kuning dengan alpha 0.8
+        } else {
+            // Checkpoint sudah diambil: material abu-abu transparan
+            cp_ambient[0] = 0.2f; cp_ambient[1] = 0.2f; cp_ambient[2] = 0.2f; cp_ambient[3] = 0.3f;
+            cp_diffuse[0] = 0.6f; cp_diffuse[1] = 0.6f; cp_diffuse[2] = 0.6f; cp_diffuse[3] = 0.3f;
+            cp_specular[0] = 0.3f; cp_specular[1] = 0.3f; cp_specular[2] = 0.3f; cp_specular[3] = 0.3f;
+            cp_shininess = 20.0f;
+            
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glColor4f(0.6f, 0.6f, 0.6f, 0.3f); // Abu-abu dengan alpha 0.3
         }
+        
+        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, cp_ambient);
+        glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, cp_diffuse);
+        glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, cp_specular);
+        glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, cp_shininess);
         
         glutSolidSphere(visualCheckpointRadius, 16, 16); // Gambar bola checkpoint
 

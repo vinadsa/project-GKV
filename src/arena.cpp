@@ -214,10 +214,21 @@ void drawGround() {
     float stepX = (2.0f * BOUNDS) / (GRID_SIZE - 1);
     float stepZ = (2.0f * BOUNDS) / (GRID_SIZE - 1);
 
+    // Set arena material properties for better lighting
+    GLfloat arena_ambient[] = {0.2f, 0.2f, 0.25f, 1.0f};   // Cool ambient
+    GLfloat arena_diffuse[] = {0.6f, 0.6f, 0.7f, 1.0f};    // Base arena color
+    GLfloat arena_specular[] = {0.1f, 0.1f, 0.2f, 1.0f};   // Low specular for matte finish
+    GLfloat arena_shininess = 10.0f;                        // Low shininess
+    
+    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, arena_ambient);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, arena_diffuse);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, arena_specular);
+    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, arena_shininess);
+
     // Definisikan warna untuk permukaan atas dan sisi
     // Warna sisi bisa dibuat lebih gelap atau berbeda
-    float side_color_r = 0.3f; // Contoh: abu-abu gelap untuk sisi
-    float side_color_g = 0.3f;
+    float side_color_r = 0.25f; // Darker for sides
+    float side_color_g = 0.25f;
     float side_color_b = 0.3f;
 
     // Threshold untuk perbedaan ketinggian yang menandakan "sisi"
@@ -263,14 +274,27 @@ void drawGround() {
                 ny /= len;
                 nz /= len;
             }
-            glNormal3f(nx, ny, nz);
-
-
-            if (is_side_quad) {
-                // Warna untuk sisi
+            glNormal3f(nx, ny, nz);            if (is_side_quad) {
+                // Set darker material for sides with slightly more specular reflection
+                GLfloat side_ambient[] = {0.15f, 0.15f, 0.2f, 1.0f};
+                GLfloat side_diffuse[] = {side_color_r, side_color_g, side_color_b, 1.0f};
+                GLfloat side_specular[] = {0.2f, 0.2f, 0.3f, 1.0f};
+                GLfloat side_shininess = 20.0f;
+                
+                glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, side_ambient);
+                glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, side_diffuse);
+                glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, side_specular);
+                glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, side_shininess);
+                
                 glColor3f(side_color_r, side_color_g, side_color_b);
             } else {
-                // Warna untuk permukaan atas (menggunakan logika pewarnaan berdasarkan ketinggian yang sudah ada)
+                // Reset material for top surfaces
+                glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, arena_ambient);
+                glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, arena_diffuse);
+                glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, arena_specular);
+                glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, arena_shininess);
+                
+                // Enhanced color calculation for permukaan atas with better lighting
                 float avg_height = (y11 + y12 + y21 + y22) / 4.0f;
                 float lowest_viz_height = defaultFallingHeight; 
                 // Sesuaikan highest_viz_height agar rentang warna pada permukaan atas terlihat bagus
@@ -279,10 +303,12 @@ void drawGround() {
                 float color_factor = (avg_height - lowest_viz_height) / (highest_viz_height - lowest_viz_height);
                 color_factor = clamp(color_factor, 0.0f, 1.0f);
 
-                // Skema warna yang sudah ada untuk permukaan atas
-                glColor3f(0.2f + color_factor * 0.6f, 
-                          0.7f - color_factor * 0.4f, 
-                          0.2f + color_factor * 0.2f);
+                // Enhanced color scheme with better contrast for lighting
+                float r = 0.3f + color_factor * 0.5f;  // Green to yellow-brown transition
+                float g = 0.6f - color_factor * 0.2f;  // Maintain some green
+                float b = 0.2f + color_factor * 0.3f;  // Add warmth at higher elevations
+                
+                glColor3f(r, g, b);
             }
 
             glVertex3f(x1, y11, z1);
