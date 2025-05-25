@@ -87,9 +87,7 @@ void Kubus(float centerX, float centerY, float centerZ, float sizeX, float sizeY
 
     for (int i = start_i; i <= end_i; ++i) {
         for (int j = start_j; j <= end_j; ++j) {
-            // Set ketinggian grid di bawah kubus ke permukaan atas kubus
-            // Ini akan membuat bola menggelinding di atasnya dan "terhalang" oleh sisinya
-            // jika area di sekitarnya lebih rendah.
+
             arenaHeights[i][j] = topSurfaceHeight;
         }
     }
@@ -103,11 +101,6 @@ void setupArenaGeometry() {
         }
     }
 
-    // 2. Hapus pembuatan arena lama (panggilan ke addFlatArea dan addRampArea yang sebelumnya ada di sini)
-    //    Arena sekarang akan dibangun menggunakan fungsi Kubus atau fungsi kustom lainnya.
-
-    // 3. Contoh penggunaan fungsi Kubus:
-    // Membuat platform awal yang datar sebagai alas
     addFlatArea(0.0f, 0.0f, BOUNDS*2.0f, BOUNDS*2.0f, pathBaseHeight - 2.0f); // pathBaseHeight dari globals.h
 
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~BUAT ARENA DIBAWAH INI~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -160,29 +153,12 @@ void getArenaHeightAndNormal(float x, float z, float& outHeight, float& outNorma
     float h_dx = getArenaHeight(x + epsilon, z); // Ketinggian di (x+eps, z)
     float h_dz = getArenaHeight(x, z + epsilon); // Ketinggian di (x, z+eps)
 
-    // Vektor tangen pertama (arah x): (epsilon, h_dx - h_center, 0)
-    // Vektor tangen kedua (arah z): (0, h_dz - h_center, epsilon)
-    // Normal adalah hasil cross product dari tangen_z X tangen_x (atau sebaliknya dengan penyesuaian tanda)
-    // (TangenZ.y * TangenX.z - TangenZ.z * TangenX.y) -> (h_dz - h_center) * 0 - epsilon * 0 = 0 (ini salah)
-    // Perhitungan normal yang lebih umum:
-    // Vektor P1 = (x, h_center, z)
-    // Vektor P2 = (x + epsilon, h_dx, z)
-    // Vektor P3 = (x, h_dz, z + epsilon)
-    // Vektor U = P2 - P1 = (epsilon, h_dx - h_center, 0)
-    // Vektor V = P3 - P1 = (0, h_dz - h_center, epsilon)
-    // Normal N = U x V
+
     outNormalX = (h_dx - h_center) * epsilon; // Komponen Y dari U * Komponen Z dari V (0*epsilon) - Komponen Z dari U * Komponen Y dari V (0*(h_dz-h_center)) -> ini salah
                  // Seharusnya: Uy*Vz - Uz*Vy = (h_dx - h_center) * epsilon - 0 * (h_dz - h_center)
     outNormalY = epsilon * epsilon; // Uz*Vx - Ux*Vz = 0*0 - epsilon*epsilon
     outNormalZ = -(h_dz - h_center) * epsilon; // Ux*Vy - Uy*Vx = epsilon*(h_dz-h_center) - (h_dx-h_center)*0
 
-    // Koreksi perhitungan normal (dari kode sebelumnya yang tampaknya lebih standar untuk heightmap)
-    // Normal dari (P(x+dx,z) - P(x,z)) x (P(x,z+dz) - P(x,z))
-    // (dx, height(x+dx,z)-height(x,z), 0)
-    // (0, height(x,z+dz)-height(x,z), dz)
-    // Nx = (height(x+dx,z)-height(x,z)) * dz
-    // Ny = dx*dz (jika dx dan dz adalah epsilon)
-    // Nz = -(height(x,z+dz)-height(x,z)) * dx
 
     outNormalX = -(h_dx - h_center); // Mengasumsikan dz adalah epsilon, ini adalah komponen dy untuk perubahan dx
     outNormalY = epsilon;            // Komponen "up"

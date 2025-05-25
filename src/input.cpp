@@ -8,7 +8,6 @@
 // Variabel global dari globals.h yang terutama terkait input
 bool isDragging = false;
 int lastMouseX = 0, lastMouseY = 0;
-// const float mouseSensitivity = 0.4f; // Dipindahkan ke globals.h
 bool keyStates[256]; // Definisi
 
 
