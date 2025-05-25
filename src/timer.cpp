@@ -10,6 +10,7 @@ static std::chrono::time_point<std::chrono::high_resolution_clock> startTime;
 static std::chrono::duration<double> elapsedSeconds = std::chrono::duration<double>::zero();
 static bool isRunning = false;
 static char timeString[32]; // Buffer for formatted time string
+static std::vector<double> checkpointTimes; // Ensure checkpointTimes is declared here
 
 void resetTimer() {
     elapsedSeconds = std::chrono::duration<double>::zero();
@@ -36,6 +37,28 @@ void updateTimer() {
     if (isRunning) {
         elapsedSeconds = std::chrono::high_resolution_clock::now() - startTime;
     }
+}
+
+// New function to get formatted checkpoint times
+std::vector<std::string> getFormattedCheckpointTimes() {
+    std::vector<std::string> formattedTimes;
+    int checkpointNumber = 1; // Initialize checkpoint number
+    for (double timeInSeconds : checkpointTimes) { // Now checkpointTimes should be recognized
+        int minutes = static_cast<int>(timeInSeconds) / 60;
+        int seconds = static_cast<int>(timeInSeconds) % 60;
+        // Corrected: use timeInSeconds for milliseconds calculation, not totalSeconds
+        int milliseconds = static_cast<int>((timeInSeconds - static_cast<int>(timeInSeconds)) * 1000);
+
+        std::ostringstream oss;
+        // Prepend "Checkpoint X: " to the time
+        oss << "Checkpoint " << checkpointNumber << ": "
+            << std::setw(2) << std::setfill('0') << minutes << ":"
+            << std::setw(2) << std::setfill('0') << seconds << "."
+            << std::setw(3) << std::setfill('0') << milliseconds;
+        formattedTimes.push_back(oss.str());
+        checkpointNumber++; // Increment for the next checkpoint
+    }
+    return formattedTimes;
 }
 
 char* getElapsedTimeString() {

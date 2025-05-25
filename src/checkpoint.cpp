@@ -2,6 +2,7 @@
 #include "globals.h" // Sekarang menyertakan checkpointRadius, Vec3, std::vector, BOUNDS
 #include "arena.h"   // For getArenaHeightAndNormal
 #include "marble.h"  // For marbleX, marbleZ, etc. (accessing via globals)
+#include "timer.h"   // Added to access recordCheckpointTime()
 #include <vector>
 #include <cmath>     // For fabs, sqrt
 #include <iostream>  // For std::cout
@@ -35,6 +36,7 @@ void checkCheckpointCollision() {
             if (fabs(marbleCurrentY - cpY) < 2.0f) {
                 activeCheckpointIndex = i;
                 std::cout << "Checkpoint " << i + 1 << " activated!" << std::endl;
+                recordCheckpointTime(); // Call function to record checkpoint time
             }
         }
     }
