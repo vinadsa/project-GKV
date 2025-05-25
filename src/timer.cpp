@@ -15,6 +15,7 @@ static std::vector<double> checkpointTimes; // Ensure checkpointTimes is declare
 void resetTimer() {
     elapsedSeconds = std::chrono::duration<double>::zero();
     isRunning = false;
+    checkpointTimes.clear(); // Clear recorded checkpoint times
     // Optionally, immediately start the timer upon reset if desired
     // startTimer(); 
 }
@@ -37,6 +38,13 @@ void updateTimer() {
     if (isRunning) {
         elapsedSeconds = std::chrono::high_resolution_clock::now() - startTime;
     }
+}
+
+// Definition for recordCheckpointTime
+void recordCheckpointTime() {
+    // Records the current elapsed time when a checkpoint is hit
+    // We use elapsedSeconds.count() as it holds the duration up to the last updateTimer call or stopTimer call
+    checkpointTimes.push_back(elapsedSeconds.count());
 }
 
 // New function to get formatted checkpoint times
