@@ -50,7 +50,7 @@ void recordCheckpointTime() {
 // New function to get formatted checkpoint times
 std::vector<std::string> getFormattedCheckpointTimes() {
     std::vector<std::string> formattedTimes;
-    int checkpointNumber = 1; // Initialize checkpoint number
+    // int checkpointNumber = 1; // No longer needed
     for (double timeInSeconds : checkpointTimes) { // Now checkpointTimes should be recognized
         int minutes = static_cast<int>(timeInSeconds) / 60;
         int seconds = static_cast<int>(timeInSeconds) % 60;
@@ -58,13 +58,12 @@ std::vector<std::string> getFormattedCheckpointTimes() {
         int milliseconds = static_cast<int>((timeInSeconds - static_cast<int>(timeInSeconds)) * 1000);
 
         std::ostringstream oss;
-        // Prepend "Checkpoint X: " to the time
-        oss << "Checkpoint " << checkpointNumber << ": "
-            << std::setw(2) << std::setfill('0') << minutes << ":"
+        // Prepend "Checkpoint X: " to the time  -- REMOVED
+        oss << std::setw(2) << std::setfill('0') << minutes << ":"
             << std::setw(2) << std::setfill('0') << seconds << "."
             << std::setw(3) << std::setfill('0') << milliseconds;
         formattedTimes.push_back(oss.str());
-        checkpointNumber++; // Increment for the next checkpoint
+        // checkpointNumber++; // No longer needed
     }
     return formattedTimes;
 }
@@ -117,18 +116,23 @@ void displayTimer(int screenWidth, int screenHeight) {
     }
 
     // Display checkpoint times
-    std::vector<std::string> checkpointStrings = getFormattedCheckpointTimes();
     int checkpointYPosition = mainTimerYPosition - 20; // Start 20 pixels below the main timer
 
-    if (!checkpointStrings.empty()) {
-        // Optional: Display a header for checkpoints
-        glRasterPos2i(10, checkpointYPosition);
-        std::string checkpointHeader = "Checkpoints:";
-        for (char ch : checkpointHeader) {
-            glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, ch);
+    bool shouldRenderCheckpoints = false;
+    if (!checkpointTimes.empty()) {
+        if (checkpointTimes.size() > 1) {
+            // If there's more than one checkpoint time, always show.
+            shouldRenderCheckpoints = true;
+        } else { 
+            // If there's exactly one checkpoint time, show it only if it's not effectively zero (>= 1ms).
+            if (checkpointTimes[0] >= 0.001) {
+                shouldRenderCheckpoints = true;
+            }
         }
-        checkpointYPosition -= 20; // Move down for the first checkpoint time
+    }
 
+    if (shouldRenderCheckpoints) {
+        std::vector<std::string> checkpointStrings = getFormattedCheckpointTimes(); // Get formatted strings only if we are displaying
         for (const std::string& cptStr : checkpointStrings) {
             glRasterPos2i(10, checkpointYPosition);
             for (char ch : cptStr) {
