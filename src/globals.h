@@ -15,7 +15,7 @@ struct GLUquadric;
 // --- Global Constants ---
 // Arena constants
 const int GRID_SIZE = 150;          // Definisikan GRID_SIZE di sini
-const float BOUNDS = 30.0f;
+const float BOUNDS = 40.0f;
 const float minGroundHeight = -20.0f; // Threshold for falling out of bounds
 const float defaultFallingHeight = -8.0f;
 const float pathBaseHeight = 0.5f;

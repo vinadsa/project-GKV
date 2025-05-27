@@ -45,6 +45,12 @@ void normalKeysDown(unsigned char key, int x, int y) {
     if (key == 'r' || key == 'R') {
         resetMarble(); // Calls the function from checkpoint.cpp
     }
+    // --- Print marble position for placement helper ---
+    if (key == 'o' || key == 'O') {
+        extern float marbleX, marbleY, marbleZ;
+        extern void PrintMarblePositionForPlacement(float x, float y, float z);
+        PrintMarblePositionForPlacement(marbleX, marbleY, marbleZ);
+    }
 }
 
 void normalKeysUp(unsigned char key, int x, int y) {

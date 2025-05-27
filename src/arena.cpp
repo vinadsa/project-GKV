@@ -306,7 +306,9 @@ void setupArenaGeometry() {
     CreateCube(0.0f, 2.0f, 5.0f, 2.0f, 2.0f, 2.0f); // Cube di tengah
     CreateRamp(0.0f, 1.0f, 2.5f, 2.0f, 2.0f, 3.0f, 'z'); // Ramp ke cube
     CreateRamp(1.0f, 1.0f, -2.5f, 2.0f, 2.0f, 3.0f, 'x'); // Ramp ke arah X
-    CreateCube(3.0f, 2.0f, -3.0f, 1.0f, 1.0f, 1.0f); // Cube di kanan
+    CreateCube(7.0f, 2.0f, -3.0f, 10.0f, 1.0f, 1.0f); // Cube di kanan
+    CreateCube(10.0f, 2.0f, -3.0f, 1.0f, 1.0f, 10.0f); // Cube di kanan
+    CreateRamp(10.0f, 2.7f, 1.25f, 2.0f, 2.0f, 7.0f, 'z');
     // Developer bisa tambah sendiri: CreateCube(...), CreateRamp(...)
 }
 
@@ -703,6 +705,15 @@ void getArenaHeightAndNormalAt(float x, float y, float z, float& height, float& 
     }
     height = current_best_h;
     outNormalX = current_best_nx; outNormalY = current_best_ny; outNormalZ = current_best_nz;
+}
+
+
+// --- Debug Helper: Print Marble Position for Object Placement ---
+// Call this function from your input handler (e.g., when 'O' is pressed)
+// Replace 'marble.x', 'marble.y', 'marble.z' with your actual marble variable names if different
+void PrintMarblePositionForPlacement(float x, float y, float z) {
+    printf("CreateCube(%.2ff, %.2ff, %.2ff, sizeX, sizeY, sizeZ);\n", x, y, z);
+    printf("CreateRamp(%.2ff, %.2ff, %.2ff, sizeX, sizeY, sizeZ, 'axis');\n", x, y, z);
 }
 
 // --- Drawing Functions ---
