@@ -3,10 +3,12 @@
 
 // Function Declarations for arena
 void setupArenaGeometry();
-void addFlatArea(float centerX, float centerZ, float width, float depth, float height);
-void addRampArea(float centerX, float centerZ, float width, float depth, float startHeight, float endHeight, char axis);
+void drawCube(float centerX, float centerY, float centerZ, float sizeX, float sizeY, float sizeZ);
+void drawRamp(float centerX, float centerY, float centerZ, float sizeX, float sizeY, float sizeZ, char axis);
 float getArenaHeight(float x, float z);
 void getArenaHeightAndNormal(float x, float z, float& outHeight, float& outNormalX, float& outNormalY, float& outNormalZ);
 void drawGround();
+float getArenaHeightAt(float x, float y, float z);
+void getArenaHeightAndNormalAt(float x, float y, float z, float& outHeight, float& outNormalX, float& outNormalY, float& outNormalZ);
 
 #endif // ARENA_H
