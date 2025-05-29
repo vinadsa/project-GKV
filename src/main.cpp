@@ -16,6 +16,7 @@ void initGame() {
     setupArenaGeometry();    // Define the arena layout
     setupCheckpoints();      // Define checkpoints after arena is built
     resetMarbleInitialState(); // Set a very basic marble position
+    score = 0;          // Reset score to zero
     activeCheckpointIndex = -1; // Ensure we start fresh with checkpoints
     resetMarble();           // Reset marble to the first checkpoint (or defined start)
     initGraphics();          // Initialize OpenGL specific settings (lighting, depth test, etc.)

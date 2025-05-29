@@ -5,6 +5,9 @@
 #include <GL/glut.h>
 #include <GL/glu.h>     // For gluSphere
 
+int score = 0; // Initialize score variable
+// This file contains the marble logic, including its position, velocity, and rendering.
+
 // Define global variables from globals.h that are primarily managed or used by marble logic
 float marbleX = 0.0f, marbleZ = 0.0f;
 float marbleVX = 0.0f, marbleVZ = 0.0f;

@@ -32,6 +32,7 @@ void checkCheckpointCollision() {
             float marbleCurrentY = getArenaHeight(marbleX, marbleZ) + 0.5f;
             if (fabs(marbleCurrentY - cpY) < 2.0f) {
                 activeCheckpointIndex = i;
+                score += 100; // Increment score for hitting a checkpoint
                 std::cout << "Checkpoint " << i + 1 << " activated!" << std::endl;
                 recordCheckpointTime(); // Call function to record checkpoint time
             }

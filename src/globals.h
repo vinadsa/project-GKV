@@ -74,4 +74,5 @@ extern int activeCheckpointIndex;
 extern GLuint marbleTextureID; // For the marble texture
 extern GLUquadric* sphereQuadric; // For drawing textured spheres
 
+extern int score; // Global score variable
 #endif // GLOBALS_H

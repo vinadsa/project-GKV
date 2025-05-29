@@ -11,13 +11,46 @@
 #include <GL/glu.h>   // For gluSphere, GLUquadric, gluBuild2DMipmaps
 #include <cmath>     // For cos, sin
 #include <iostream>  // For std::cout, std::cerr
-
+#include <string> // For std::string
 // #define STB_IMAGE_IMPLEMENTATION // Define this in exactly one .c or .cpp file
 #include "stb_image.h"         // For loading images
 
 // Global definitions
 GLuint marbleTextureID = 0; // Initialize to 0 (no texture)
 GLUquadric* sphereQuadric = nullptr;
+
+
+void drawScore() {
+    std::string scoreStr = "Score: " + std::to_string(score);
+    glColor3f(1.0f, 1.0f, 0.0f); // Kuning
+    void* font = GLUT_BITMAP_HELVETICA_18;
+
+    // Setup ortho projection supaya text selalu di posisi layar
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    int width = glutGet(GLUT_WINDOW_WIDTH);
+    int height = glutGet(GLUT_WINDOW_HEIGHT);
+    gluOrtho2D(0, width, 0, height);
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+
+    int textWidth = scoreStr.length() * 10; // Kira-kira, tergantung font
+    int x = width / 2 - textWidth / 2;
+    int y = height - 40;
+
+    glRasterPos2i(x, y);
+    for (char c : scoreStr) {
+        glutBitmapCharacter(font, c);
+    }
+
+    glPopMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+}
 
 // Dynamic lighting function that updates light positions based on marble position
 void updateDynamicLighting() {
@@ -231,6 +264,7 @@ void display() {
     // Draw actual objects
     drawMarble(); // The actual marble
     drawCheckpoints();
+    drawScore(); // Draw the score on the screen
 
     // Display the timer
     int screenWidth = glutGet(GLUT_WINDOW_WIDTH);
