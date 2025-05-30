@@ -7,4 +7,7 @@ void timer(int value);
 void initGraphics(); // For OpenGL specific initializations
 void updateDynamicLighting(); // Update lighting based on marble position
 
+// Forward declaration for initGame function
+void initGame();
+
 #endif // GRAPHICS_H

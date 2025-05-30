@@ -21,7 +21,16 @@ GLUquadric* sphereQuadric = nullptr;
 
 
 void drawScore() {
-    std::string scoreStr = "Score: " + std::to_string(score);
+    // Calculate total possible score based on collected checkpoints
+    // Count uncollected checkpoints (excluding first checkpoint which is spawn point)
+    int totalPossibleScore = 0;
+    if (checkpoints.size() > 1) { // If there's more than just the spawn checkpoint
+        for (int i = 1; i < checkpoints.size(); ++i) { // Start from index 1 to exclude spawn
+            totalPossibleScore += 100; // Each checkpoint is worth 100 points
+        }
+    }
+    
+    std::string scoreStr = "Score: " + std::to_string(score) + "/" + std::to_string(totalPossibleScore);
     glColor3f(1.0f, 1.0f, 0.0f); // Kuning
     void* font = GLUT_BITMAP_HELVETICA_18;
 
@@ -287,6 +296,15 @@ void reshape(int w, int h) {
 void timer(int value) {
     updatePhysics();
     updateTimer(); // Add this line to update the timer every frame
+    
+    // Check if countdown timer has expired
+    if (isCountdownExpired()) {
+        std::cout << "Time's up! Game Over!" << std::endl;
+        // Optionally reset the game or show game over screen
+        // For now, we'll just restart the game
+        initGame();
+    }
+    
     glutPostRedisplay();
     glutTimerFunc(16, timer, 0); // ~60 FPS
 }

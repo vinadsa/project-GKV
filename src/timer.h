@@ -7,6 +7,18 @@
 // Call this once at the beginning of your game or when you want to reset the timer
 void resetTimer();
 
+// Initialize countdown timer with initial time in seconds
+void initCountdownTimer(double initialSeconds);
+
+// Add time to the countdown timer
+void addTimeToCountdown(double secondsToAdd);
+
+// Check if countdown has reached zero
+bool isCountdownExpired();
+
+// Get remaining time in seconds
+double getRemainingTime();
+
 // Call this to start or resume the timer
 void startTimer();
 

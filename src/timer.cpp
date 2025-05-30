@@ -12,12 +12,18 @@ static bool isRunning = false;
 static char timeString[32]; // Buffer for formatted time string
 static std::vector<double> checkpointTimes; // Ensure checkpointTimes is declared here
 
+// Countdown timer variables
+static double countdownTime = 60.0; // Default 1 minute
+static std::chrono::time_point<std::chrono::high_resolution_clock> countdownStartTime;
+static bool countdownRunning = false;
+
 void resetTimer() {
     elapsedSeconds = std::chrono::duration<double>::zero();
     isRunning = false;
     checkpointTimes.clear(); // Clear recorded checkpoint times
-    // Optionally, immediately start the timer upon reset if desired
-    // startTimer(); 
+    // Reset countdown to initial time
+    countdownTime = 60.0; // Reset to 1 minute
+    countdownRunning = false;
 }
 
 void startTimer() {
@@ -69,19 +75,18 @@ std::vector<std::string> getFormattedCheckpointTimes() {
 }
 
 char* getElapsedTimeString() {
-    double totalSeconds = elapsedSeconds.count();
+    // Use countdown timer instead of elapsed time
+    double totalSeconds = getRemainingTime();
     int minutes = static_cast<int>(totalSeconds) / 60;
     int seconds = static_cast<int>(totalSeconds) % 60;
     int milliseconds = static_cast<int>((totalSeconds - static_cast<int>(totalSeconds)) * 1000);
 
     std::ostringstream oss;
-    oss << std::setw(2) << std::setfill('0') << minutes << ":"
+    oss << "Time: " << std::setw(2) << std::setfill('0') << minutes << ":"
         << std::setw(2) << std::setfill('0') << seconds << "."
         << std::setw(3) << std::setfill('0') << milliseconds;
     
     // Copy to static buffer
-    // Ensure the buffer is large enough for your format. "MM:SS.mmm" is 9 chars + null terminator.
-    // A safer approach would be to return std::string or pass a buffer.
     snprintf(timeString, sizeof(timeString), "%s", oss.str().c_str());
     return timeString;
 }
@@ -113,34 +118,7 @@ void displayTimer(int screenWidth, int screenHeight) {
     char* timeStr = getElapsedTimeString();
     for (char* c = timeStr; *c != '\0'; c++) {
         glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *c); // Or another GLUT font
-    }
-
-    // Display checkpoint times
-    int checkpointYPosition = mainTimerYPosition - 20; // Start 20 pixels below the main timer
-
-    bool shouldRenderCheckpoints = false;
-    if (!checkpointTimes.empty()) {
-        if (checkpointTimes.size() > 1) {
-            // If there's more than one checkpoint time, always show.
-            shouldRenderCheckpoints = true;
-        } else { 
-            // If there's exactly one checkpoint time, show it only if it's not effectively zero (>= 1ms).
-            if (checkpointTimes[0] >= 0.001) {
-                shouldRenderCheckpoints = true;
-            }
-        }
-    }
-
-    if (shouldRenderCheckpoints) {
-        std::vector<std::string> checkpointStrings = getFormattedCheckpointTimes(); // Get formatted strings only if we are displaying
-        for (const std::string& cptStr : checkpointStrings) {
-            glRasterPos2i(10, checkpointYPosition);
-            for (char ch : cptStr) {
-                glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, ch);
-            }
-            checkpointYPosition -= 20; // Move down for the next checkpoint time
-        }
-    }
+    }    // Checkpoint times display removed - only show countdown timer
 
     // Restore previous state
     glEnable(GL_DEPTH_TEST);
@@ -150,4 +128,43 @@ void displayTimer(int screenWidth, int screenHeight) {
     glPopMatrix();
     glMatrixMode(GL_MODELVIEW);
     glPopMatrix();
+}
+
+void initCountdownTimer(double initialSeconds) {
+    countdownTime = initialSeconds;
+    countdownStartTime = std::chrono::high_resolution_clock::now();
+    countdownRunning = true;
+}
+
+void addTimeToCountdown(double secondsToAdd) {
+    countdownTime += secondsToAdd;
+    // If countdown was expired and we're adding time, restart it
+    if (!countdownRunning && countdownTime > 0) {
+        countdownStartTime = std::chrono::high_resolution_clock::now();
+        countdownRunning = true;
+    }
+}
+
+bool isCountdownExpired() {
+    if (!countdownRunning) return true;
+    
+    auto now = std::chrono::high_resolution_clock::now();
+    auto elapsed = std::chrono::duration_cast<std::chrono::duration<double>>(now - countdownStartTime);
+    double remaining = countdownTime - elapsed.count();
+    
+    if (remaining <= 0) {
+        countdownRunning = false;
+        return true;
+    }
+    return false;
+}
+
+double getRemainingTime() {
+    if (!countdownRunning) return 0.0;
+    
+    auto now = std::chrono::high_resolution_clock::now();
+    auto elapsed = std::chrono::duration_cast<std::chrono::duration<double>>(now - countdownStartTime);
+    double remaining = countdownTime - elapsed.count();
+    
+    return remaining > 0 ? remaining : 0.0;
 }

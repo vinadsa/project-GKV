@@ -11,14 +11,27 @@
 // Variabel global dari globals.h yang terutama terkait checkpoint
 std::vector<Vec3> checkpoints;
 int activeCheckpointIndex = -1;
+std::vector<bool> checkpointCollected; // Track which checkpoints have been collected
 
 
-void addCheckpoint(float x, float z) {
-    checkpoints.push_back({x, 0.0f, z}); // Y is placeholder
+void addCheckpoint(float x, float z, float bonusMinutes) {
+    CheckpointData data;
+    data.position = {x, 0.0f, z}; // Y is placeholder
+    data.bonusMinutes = bonusMinutes;
+    
+    checkpointData.push_back(data);
+    checkpoints.push_back({x, 0.0f, z}); // Keep backward compatibility
+    checkpointCollected.push_back(false); // Initialize as not collected
 }
 
 void checkCheckpointCollision() {
-    for (int i = activeCheckpointIndex + 1; i < checkpoints.size(); ++i) {
+    // Check all checkpoints, not just those after activeCheckpointIndex
+    for (int i = 0; i < checkpoints.size(); ++i) {
+        // Skip if this checkpoint is already collected
+        if (checkpointCollected[i]) {
+            continue;
+        }
+        
         Vec3 cp = checkpoints[i];
         float cpGroundH, dummyNX, dummyNY, dummyNZ;
         getArenaHeightAndNormal(cp.x, cp.z, cpGroundH, dummyNX, dummyNY, dummyNZ);
@@ -31,9 +44,24 @@ void checkCheckpointCollision() {
         if (distSq < checkpointRadius * checkpointRadius) {
             float marbleCurrentY = getArenaHeight(marbleX, marbleZ) + 0.5f;
             if (fabs(marbleCurrentY - cpY) < 2.0f) {
-                activeCheckpointIndex = i;
-                score += 100; // Increment score for hitting a checkpoint
-                std::cout << "Checkpoint " << i + 1 << " activated!" << std::endl;
+                // Mark this checkpoint as collected
+                checkpointCollected[i] = true;
+                // Update spawn point to this checkpoint (highest index collected becomes spawn)
+                if (i > activeCheckpointIndex) {
+                    activeCheckpointIndex = i;
+                }
+                  // Only give score if this is NOT the first checkpoint (spawn point)
+                if (i > 0) {
+                    score += 100; // Increment score for hitting a checkpoint
+                    // Add bonus time to countdown
+                    double bonusSeconds = checkpointData[i].bonusMinutes * 60.0;
+                    addTimeToCountdown(bonusSeconds);
+                    std::cout << "Checkpoint " << i + 1 << " collected! Score +100. Time +" 
+                              << checkpointData[i].bonusMinutes << " min. Spawn point updated." << std::endl;
+                } else {
+                    std::cout << "Spawn checkpoint collected (no score). Spawn point updated." << std::endl;
+                }
+                
                 recordCheckpointTime(); // Call function to record checkpoint time
             }
         }
@@ -58,13 +86,11 @@ void drawCheckpoints() {
         float visualCheckpointRadius = marbleRadius * 0.5f;
         // Y efektif untuk visual checkpoint (pusat bola checkpoint)
         float cpEffectiveY = cpGroundH + visualCheckpointRadius;        glPushMatrix();
-        glTranslatef(cp_data.x, cpEffectiveY, cp_data.z);
-
-        // Set material properties for checkpoints
+        glTranslatef(cp_data.x, cpEffectiveY, cp_data.z);        // Set material properties for checkpoints
         GLfloat cp_ambient[4], cp_diffuse[4], cp_specular[4];
         GLfloat cp_shininess;
         
-        if ((int)i > activeCheckpointIndex) {
+        if (!checkpointCollected[i]) {
             // Checkpoint belum diambil: material kuning berkilau
             cp_ambient[0] = 0.3f; cp_ambient[1] = 0.3f; cp_ambient[2] = 0.0f; cp_ambient[3] = 0.8f;
             cp_diffuse[0] = 1.0f; cp_diffuse[1] = 1.0f; cp_diffuse[2] = 0.0f; cp_diffuse[3] = 0.8f;
@@ -105,10 +131,22 @@ void resetMarble() {
         std::cout << "Resetting to Checkpoint " << activeCheckpointIndex + 1 << std::endl;
     } else if (!checkpoints.empty()) {
         resetPos = checkpoints[0];
-         std::cout << "Resetting to Start (Checkpoint 1)" << std::endl;
+        // Only set activeCheckpointIndex = 0 if no checkpoints have been collected yet
+        bool anyCheckpointCollected = false;
+        for (bool collected : checkpointCollected) {
+            if (collected) {
+                anyCheckpointCollected = true;
+                break;
+            }
+        }
+        if (!anyCheckpointCollected) {
+            activeCheckpointIndex = 0; // Set to 0 since we're spawning at the first checkpoint
+        }
+        std::cout << "Resetting to Start (Checkpoint 1)" << std::endl;
     } else {
         // Fallback if no checkpoints are added - use a hardcoded start from marble.cpp's initial state idea
         resetPos = {0.0f, 0.0f, -BOUNDS + 2.0f}; // Ensure BOUNDS is accessible or use a local const
+        activeCheckpointIndex = -1; // No checkpoints available
         std::cout << "Resetting to Fallback Start" << std::endl;
     }
 
@@ -128,7 +166,8 @@ void setupCheckpoints() {
     // Ensure BOUNDS is accessible if used directly or pass it if it's not global from globals.h
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~buat checkpoint di sini~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    addCheckpoint(0.0f, -8.0f);
-    addCheckpoint(0.0f, -4.0f);
-    addCheckpoint(-6.0f, -4.5f);
+    addCheckpoint(0.0f, -8.0f, 0.0f);    // First checkpoint (spawn) - 0.0 minutes bonus
+    addCheckpoint(0.0f, -4.0f, 1.0f);    // Second checkpoint - 1 minute bonus  
+    addCheckpoint(-6.0f, -4.5f, 1.5f);   // Third checkpoint - 1.5 minutes bonus
+    addCheckpoint(-10.0f, -2.0f, 2.0f);  // Fourth checkpoint - 2 minutes bonus
 }

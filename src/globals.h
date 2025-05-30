@@ -68,11 +68,21 @@ struct Vec3 {
     float x, y, z;
 };
 
+struct CheckpointData {
+    Vec3 position;
+    float bonusMinutes;
+};
+
+extern std::vector<CheckpointData> checkpointData; // Store checkpoint position and bonus time
 extern std::vector<Vec3> checkpoints;
 extern int activeCheckpointIndex;
+extern std::vector<bool> checkpointCollected; // Track which checkpoints have been collected
 
 extern GLuint marbleTextureID; // For the marble texture
 extern GLUquadric* sphereQuadric; // For drawing textured spheres
 
 extern int score; // Global score variable
+
+// Function declarations
+void initGame(); // Game initialization function
 #endif // GLOBALS_H

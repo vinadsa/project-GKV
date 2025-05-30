@@ -3,7 +3,7 @@
 
 #include "globals.h" // For Vec3, std::vector
 
-void addCheckpoint(float x, float z);
+void addCheckpoint(float x, float z, float bonusMinutes = 1.0f); // Add bonus time parameter
 void checkCheckpointCollision();
 void resetMarble(); // Centralized reset logic
 void setupCheckpoints(); // To add all checkpoints in one place

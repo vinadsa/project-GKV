@@ -303,8 +303,8 @@ void drawRamp(float centerX, float centerY, float centerZ, float sizeX, float si
 void setupArenaGeometry() {
     cubes.clear(); ramps.clear();
     // Contoh penggunaan:
-    CreateCube(0.0f, 2.0f, 5.0f, 2.0f, 2.0f, 2.0f); // Cube di tengah
-    CreateRamp(0.0f, 1.0f, 2.5f, 2.0f, 2.0f, 3.0f, 'z'); // Ramp ke cube
+    // CreateCube(0.0f, 2.0f, 5.0f, 2.0f, 2.0f, 2.0f); // Cube di tengah
+    // CreateRamp(0.0f, 1.0f, 2.5f, 2.0f, 2.0f, 3.0f, 'z'); // Ramp ke cube
     CreateRamp(1.0f, 1.0f, -2.5f, 2.0f, 2.0f, 3.0f, 'x'); // Ramp ke arah X
     CreateCube(7.0f, 2.0f, -3.0f, 10.0f, 1.0f, 1.0f); // Cube di kanan
     CreateCube(10.0f, 2.0f, -3.0f, 1.0f, 1.0f, 10.0f); // Cube di kanan
@@ -712,23 +712,26 @@ void getArenaHeightAndNormalAt(float x, float y, float z, float& height, float& 
 // Call this function from your input handler (e.g., when 'O' is pressed)
 // Replace 'marble.x', 'marble.y', 'marble.z' with your actual marble variable names if different
 void PrintMarblePositionForPlacement(float x, float y, float z) {
+    printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
     printf("CreateCube(%.2ff, %.2ff, %.2ff, sizeX, sizeY, sizeZ);\n", x, y, z);
     printf("CreateRamp(%.2ff, %.2ff, %.2ff, sizeX, sizeY, sizeZ, 'axis');\n", x, y, z);
+    printf("addCheckpoint(%.2ff, %.2ff, bonusMinutes);\n", x, z);
+    printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
 }
 
 // --- Drawing Functions ---
 void drawGround() {
-    // Set material properties for ground (flat plane)
-    GLfloat ground_ambient[] = {0.2f, 0.3f, 0.2f, 1.0f};
-    GLfloat ground_diffuse[] = {0.3f, 0.5f, 0.3f, 1.0f};
-    GLfloat ground_specular[] = {0.1f, 0.1f, 0.1f, 1.0f};
-    GLfloat ground_shininess = 5.0f;
+    // Set material properties for ground (flat plane) - Grass green color
+    GLfloat ground_ambient[] = {0.1f, 0.4f, 0.1f, 1.0f};
+    GLfloat ground_diffuse[] = {0.2f, 0.8f, 0.2f, 1.0f};
+    GLfloat ground_specular[] = {0.1f, 0.2f, 0.1f, 1.0f};
+    GLfloat ground_shininess = 8.0f;
 
     glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ground_ambient);
     glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, ground_diffuse);
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, ground_specular);
     glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, ground_shininess);
-    glColor3f(0.3f, 0.5f, 0.3f); // Warna dasar ground
+    glColor3f(0.2f, 0.8f, 0.2f); // Grass green color
 
     // Gambar ground sebagai sebuah quad besar
     glBegin(GL_QUADS);

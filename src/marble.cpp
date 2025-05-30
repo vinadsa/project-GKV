@@ -6,6 +6,10 @@
 #include <GL/glu.h>     // For gluSphere
 
 int score = 0; // Initialize score variable
+
+// Define checkpoint data storage
+std::vector<CheckpointData> checkpointData; // Store checkpoint position and bonus time
+
 // This file contains the marble logic, including its position, velocity, and rendering.
 
 // Define global variables from globals.h that are primarily managed or used by marble logic

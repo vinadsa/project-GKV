@@ -21,6 +21,7 @@ void initGame() {
     resetMarble();           // Reset marble to the first checkpoint (or defined start)
     initGraphics();          // Initialize OpenGL specific settings (lighting, depth test, etc.)
     resetTimer();            // Reset the timer
+    initCountdownTimer(60.0); // Initialize countdown with 1 minute
     startTimer();            // Start the timer
 }
 
