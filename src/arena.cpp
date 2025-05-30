@@ -309,8 +309,12 @@ void setupArenaGeometry() {
     CreateCube(7.0f, 2.0f, -3.0f, 10.0f, 1.0f, 1.0f); // Cube di kanan
     CreateCube(10.0f, 2.0f, -3.0f, 1.0f, 1.0f, 10.0f); // Cube di kanan
     CreateRamp(10.0f, 2.7f, 1.25f, 2.0f, 2.0f, 7.0f, 'z');
+    CreateCube(9.98f, 0.50f, 5.92f,  1.0f, 1.0f, 10.0f);
+ 
+    
     // Developer bisa tambah sendiri: CreateCube(...), CreateRamp(...)
 }
+
 
 // --- Arena Physics Lookup Functions ---
 float getArenaHeight(float x, float z) {
