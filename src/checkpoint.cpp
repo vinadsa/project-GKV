@@ -167,7 +167,9 @@ void setupCheckpoints() {
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~buat checkpoint di sini~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     addCheckpoint(0.0f, -8.0f, 0.0f);    // First checkpoint (spawn) - 0.0 minutes bonus
-    addCheckpoint(0.0f, -4.0f, 1.0f);    // Second checkpoint - 1 minute bonus  
-    addCheckpoint(-6.0f, -4.5f, 1.5f);   // Third checkpoint - 1.5 minutes bonus
-    addCheckpoint(-10.0f, -2.0f, 2.0f);  // Fourth checkpoint - 2 minutes bonus
+    addCheckpoint(0.0f, -4.0f, 0.5f);    // Second checkpoint - 1 minute bonus  
+    addCheckpoint(-6.0f, -4.5f, 0.5f);   // Third checkpoint - 1.5 minutes bonus
+    addCheckpoint(-10.0f, -2.0f, 0.5f);  // Fourth checkpoint - 2 minutes bonus
+    addCheckpoint(9.98f, -7.84f, 0.5f);
+    addCheckpoint(9.95f, 22.66f, 0.5f);
 }

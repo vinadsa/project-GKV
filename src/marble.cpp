@@ -29,6 +29,7 @@ void drawMarble() {
 
     // Visual Rolling Logic (see section 2)
     const float marbleRadius = 0.5f;
+    
     if (marbleRadius > 1e-6f && deltaTime > 0.0f) {
         float deltaAngleX = (marbleVZ * deltaTime / marbleRadius) * (180.0f / 3.1415926535f);
         float deltaAngleZ = (marbleVX * deltaTime / marbleRadius) * (180.0f / 3.1415926535f); // Changed -marbleVX to marbleVX
@@ -36,7 +37,9 @@ void drawMarble() {
         totalRotationAngleZ += deltaAngleZ;
     }
     glRotatef(totalRotationAngleX, 1.0f, 0.0f, 0.0f);
-    glRotatef(totalRotationAngleZ, 0.0f, 0.0f, 1.0f);    if (marbleTextureID != 0 && sphereQuadric != nullptr) {
+    glRotatef(totalRotationAngleZ, 0.0f, 0.0f, 1.0f);    
+    
+    if (marbleTextureID != 0 && sphereQuadric != nullptr) {
         // For textured marble: disable GL_COLOR_MATERIAL temporarily to use explicit materials
         glDisable(GL_COLOR_MATERIAL);
         
