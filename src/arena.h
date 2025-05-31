@@ -5,6 +5,7 @@
 void setupArenaGeometry();
 void drawCube(float centerX, float centerY, float centerZ, float sizeX, float sizeY, float sizeZ);
 void drawRamp(float centerX, float centerY, float centerZ, float sizeX, float sizeY, float sizeZ, char axis);
+void drawBush(float centerX, float centerY, float centerZ, float radius);
 float getArenaHeight(float x, float z);
 void getArenaHeightAndNormal(float x, float z, float& outHeight, float& outNormalX, float& outNormalY, float& outNormalZ);
 void drawGround();

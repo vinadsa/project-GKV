@@ -36,8 +36,12 @@ struct ArenaCube {
 struct ArenaRamp {
     float x, y, z, sizeX, sizeY, sizeZ; char axis;
 };
+struct ArenaBush {
+    float x, y, z, radius;
+};
 std::vector<ArenaCube> cubes;
 std::vector<ArenaRamp> ramps;
+std::vector<ArenaBush> bushes;
 
 void CreateCube(float x, float y, float z, float sizeX, float sizeY, float sizeZ) {
     cubes.push_back({x, y, z, sizeX, sizeY, sizeZ});
@@ -93,6 +97,12 @@ void CreateRamp(float x, float y, float z, float sizeX, float sizeY, float sizeZ
             }
         }
     }
+}
+
+void CreateBush(float x, float y, float z, float radius) {
+    bushes.push_back({x, y, z, radius});
+    // Note: Bushes don't need collision since they are decorative only
+    // No need to update arenaHeights array
 }
 
 // --- Arena Building Helper Functions ---
@@ -425,11 +435,11 @@ void drawRamp(float centerX, float centerY, float centerZ, float sizeX, float si
 
 
 void setupArenaGeometry() {
-    cubes.clear(); ramps.clear();
+    cubes.clear(); ramps.clear(); bushes.clear();
     // Contoh penggunaan:
     // CreateCube(0.0f, 2.0f, 5.0f, 2.0f, 2.0f, 2.0f); // Cube di tengah
     // CreateRamp(0.0f, 1.0f, 2.5f, 2.0f, 2.0f, 3.0f, 'z'); // Ramp ke cube
-    CreateRamp(1.0f, 1.0f, -2.5f, 2.0f, 2.0f, 3.0f, 'x'); // Ramp ke arah X
+    CreateRamp(1.0f, 1.0f, -3.0f, 2.0f, 2.0f, 1.0f, 'x'); // Ramp ke arah X
     CreateCube(7.0f, 2.0f, -3.0f, 10.0f, 1.0f, 1.0f); // Cube di kanan
     CreateCube(10.0f, 2.0f, -3.0f, 1.0f, 1.0f, 10.0f); // Cube di kanan
     CreateRamp(10.0f, 2.7f, 1.25f, 2.0f, 2.0f, 7.0f, 'z');
@@ -448,11 +458,21 @@ void setupArenaGeometry() {
     CreateCube(28.67f, 1.5f, 23.59f, 1.0f, 1.0f, 1.0f);
     CreateCube(28.67f, 1.5f, 25.59f, 1.0f, 1.0f, 1.0f);
     CreateCube(28.67f, 1.5f, 27.59f, 1.0f, 1.0f, 1.0f);
-    CreateRamp(28.67f, 3.5f, 31.09f, 1.0f, 3.0f, 6.0f, 'z');
-    CreateCube(28.67f, 4.5f, 38.09f, 8.0f, 1.0f, 8.0f);
+    CreateRamp(28.67f, 3.5f, 31.09f, 1.0f, 3.0f, 6.0f, 'z');    CreateCube(28.67f, 4.5f, 38.09f, 8.0f, 1.0f, 8.0f);
+
+    // Create decorative bushes (semak-semak)
+    CreateBush(-5.0f, 0.5f, -10.0f, 0.8f);   // Bush near start area
+    CreateBush(-3.0f, 0.4f, -8.0f, 0.6f);    // Smaller bush
+    CreateBush(5.0f, 0.7f, 0.0f, 0.7f);      // Medium bush near middle
+    CreateBush(15.0f, 0.6f, 15.0f, 0.7f);    // Bush near platform area
+    CreateBush(25.0f, 0.5f, 10.0f, 0.7f);    // Bush near end area
+    CreateBush(-10.50f, 0.50f, 13.14f, 0.5f);
+    CreateBush(30.0f, 0.4f, 30.0f, 0.5f);    // Small bush near final area
+    CreateBush(-1.44f, 0.50f, 28.83f, 0.7f);
+    CreateBush(20.71f, 0.50f, -12.45f, 0.7f);
 
 
-    // Developer bisa tambah sendiri: CreateCube(...), CreateRamp(...)
+    // Developer bisa tambah sendiri: CreateCube(...), CreateRamp(...), CreateBush(...)
 }
 
 
@@ -859,6 +879,7 @@ void PrintMarblePositionForPlacement(float x, float y, float z) {
     printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
     printf("CreateCube(%.2ff, %.2ff, %.2ff, sizeX, sizeY, sizeZ);\n", x, y, z);
     printf("CreateRamp(%.2ff, %.2ff, %.2ff, sizeX, sizeY, sizeZ, 'axis');\n", x, y, z);
+    printf("CreateBush(%.2ff, %.2ff, %.2ff, radius);\n", x, y, z);
     printf("addCheckpoint(%.2ff, %.2ff, bonusMinutes);\n", x, z);
     printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
 }
@@ -912,5 +933,63 @@ void drawGround() {
     glColor3f(0.5f, 0.5f, 0.7f); // Warna ramp
     for (const auto& r : ramps) {
         drawRamp(r.x, r.y, r.z, r.sizeX, r.sizeY, r.sizeZ, r.axis);
+    }
+
+    // Draw bushes (decorative only)
+    for (const auto& b : bushes) {
+        drawBush(b.x, b.y, b.z, b.radius);
+    }
+}
+
+void drawBush(float centerX, float centerY, float centerZ, float radius) {
+    // Set material properties for bush (green, plant-like)
+    GLfloat bush_ambient[] = {0.1f, 0.3f, 0.1f, 1.0f};   // Dark green ambient
+    GLfloat bush_diffuse[] = {0.2f, 0.6f, 0.2f, 1.0f};   // Medium green diffuse
+    GLfloat bush_specular[] = {0.05f, 0.1f, 0.05f, 1.0f}; // Very low specular (plants aren't shiny)
+    GLfloat bush_shininess = 5.0f;                         // Low shininess
+    
+    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, bush_ambient);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, bush_diffuse);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, bush_specular);
+    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, bush_shininess);
+    glColor3f(0.2f, 0.6f, 0.2f); // Green color for bush
+    
+    // Create a cluster of spheres to form a realistic bush
+    // Define sphere offsets relative to center for bush cluster
+    struct SphereOffset {
+        float x, y, z, scale;
+    };    // Main center sphere and surrounding spheres in cluster formation (lowered positioning)
+    SphereOffset spheres[] = {
+        // Main center sphere (largest)
+        {0.0f, 0.0f, 0.0f, 1.3f},
+        
+        // Middle layer spheres (lowered more toward ground level)
+        {1.0f, -0.2f, -0.7f, 0.7f},
+        {-0.9f, -0.25f, 0.8f, 0.65f},
+        {0.5f, -0.25f, 1.1f, 0.6f},
+        
+        // Lower layer spheres (majority here, closer to ground)
+        {0.9f, -0.3f, 0.3f, 0.5f},
+        {-1.0f, -0.4f, -0.2f, 0.55f},
+        {0.3f, -0.5f, -1.0f, 0.45f}
+    };
+    
+    int numSpheres = sizeof(spheres) / sizeof(SphereOffset);
+    
+    // Draw each sphere in the cluster
+    for (int i = 0; i < numSpheres; i++) {
+        glPushMatrix();
+            // Position relative to bush center
+            glTranslatef(centerX + spheres[i].x * radius, 
+                        centerY + spheres[i].y * radius, 
+                        centerZ + spheres[i].z * radius);
+            
+            // Vary the green color slightly for each sphere for more realism
+            float colorVariation = 0.8f + (i % 3) * 0.1f; // Slight variation
+            glColor3f(0.2f * colorVariation, 0.6f * colorVariation, 0.2f * colorVariation);
+            
+            // Draw sphere with scaled radius
+            glutSolidSphere(radius * spheres[i].scale, 12, 12);
+        glPopMatrix();
     }
 }
