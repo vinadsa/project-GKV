@@ -309,9 +309,25 @@ void setupArenaGeometry() {
     CreateCube(7.0f, 2.0f, -3.0f, 10.0f, 1.0f, 1.0f); // Cube di kanan
     CreateCube(10.0f, 2.0f, -3.0f, 1.0f, 1.0f, 10.0f); // Cube di kanan
     CreateRamp(10.0f, 2.7f, 1.25f, 2.0f, 2.0f, 7.0f, 'z');
-    CreateCube(9.98f, 0.50f, 5.92f,  1.0f, 1.0f, 10.0f);
+    CreateCube(10.17f, 0.50f, 6.09f, 1.0f, 1.0f, 1.0f);          // Cube baru
+    CreateRamp(10.17f, 0.50f, 6.09f, 1.0f, 1.0f, 1.0f, 'z');     // Ramp arah Z
  
-    
+    CreateCube(10.17f, 0.5f, 9.59f, 1.0f, 1.0f, 6.0f);
+    CreateRamp(10.17f, 2.0f, 14.59f, 1.0f, 2.0f, 4.0f, 'z');
+    CreateCube(10.17f, 2.5f, 20.09f, 3.0f, 1.0f, 7.0f);
+
+    CreateRamp(13.67f, 3.75f, 20.09f, 4.0f, 1.5f, 2.0f, 'x');
+    CreateCube(18.17f, 4.0f, 20.09f, 5.0f, 1.0f, 2.0f);
+
+    CreateRamp(23.17f, 3.25f, 20.09f, 5.0f, 2.5f, 2.0f, 'x');
+    CreateCube(28.67f, 1.5f, 20.09f, 6.0f, 1.0f, 4.0f);
+    CreateCube(28.67f, 1.5f, 23.59f, 1.0f, 1.0f, 1.0f);
+    CreateCube(28.67f, 1.5f, 25.59f, 1.0f, 1.0f, 1.0f);
+    CreateCube(28.67f, 1.5f, 27.59f, 1.0f, 1.0f, 1.0f);
+    CreateRamp(28.67f, 3.5f, 31.09f, 1.0f, 3.0f, 6.0f, 'z');
+    CreateCube(28.67f, 4.5f, 38.09f, 8.0f, 1.0f, 8.0f);
+
+
     // Developer bisa tambah sendiri: CreateCube(...), CreateRamp(...)
 }
 
