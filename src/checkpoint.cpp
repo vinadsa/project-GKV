@@ -35,15 +35,16 @@ void checkCheckpointCollision() {
         Vec3 cp = checkpoints[i];
         float cpGroundH, dummyNX, dummyNY, dummyNZ;
         getArenaHeightAndNormal(cp.x, cp.z, cpGroundH, dummyNX, dummyNY, dummyNZ);
-        float cpY = cpGroundH + 0.5f;
-
+        float cpY = cpGroundH + 0.5f;        // Calculate 3D distance between marble and checkpoint
         float dx = marbleX - cp.x;
         float dz = marbleZ - cp.z;
-        float distSq = dx * dx + dz * dz;
-
-        if (distSq < checkpointRadius * checkpointRadius) {
-            float marbleCurrentY = getArenaHeight(marbleX, marbleZ) + 0.5f;
-            if (fabs(marbleCurrentY - cpY) < 2.0f) {
+        float dy = marbleY - cpY;
+        float dist3D = sqrt(dx * dx + dy * dy + dz * dz);
+        
+        // Collision radius is the sum of marble radius and checkpoint radius
+        float collisionRadius = marbleRadius + (marbleRadius * 0.5f); // checkpoint radius is marbleRadius * 0.5f
+        
+        if (dist3D < collisionRadius) {
                 // Mark this checkpoint as collected
                 checkpointCollected[i] = true;
                 // Update spawn point to this checkpoint (highest index collected becomes spawn)
@@ -61,12 +62,10 @@ void checkCheckpointCollision() {
                 } else {
                     std::cout << "Spawn checkpoint collected (no score). Spawn point updated." << std::endl;
                 }
-                
-                recordCheckpointTime(); // Call function to record checkpoint time
+                  recordCheckpointTime(); // Call function to record checkpoint time
             }
         }
     }
-}
 
 void drawCheckpoints() {
     // Aktifkan blending untuk checkpoint yang sudah diambil (transparan)
@@ -166,8 +165,10 @@ void setupCheckpoints() {
     // Ensure BOUNDS is accessible if used directly or pass it if it's not global from globals.h
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~buat checkpoint di sini~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    addCheckpoint(0.0f, -8.0f, 0.0f);    // First checkpoint (spawn) - 0.0 minutes bonus
-    addCheckpoint(0.0f, -4.0f, 1.0f);    // Second checkpoint - 1 minute bonus  
-    addCheckpoint(-6.0f, -4.5f, 1.5f);   // Third checkpoint - 1.5 minutes bonus
-    addCheckpoint(-10.0f, -2.0f, 2.0f);  // Fourth checkpoint - 2 minutes bonus
+    // addCheckpoint(0.0f, -8.0f, 0.0f);    // First checkpoint (spawn) - 0.0 minutes bonus
+    // addCheckpoint(0.0f, -4.0f, 0.5f);    // Second checkpoint - 1 minute bonus  
+    // addCheckpoint(-6.0f, -4.5f, 0.5f);   // Third checkpoint - 1.5 minutes bonus
+    addCheckpoint(-10.0f, -2.0f, 0.5f);  // Fourth checkpoint - 2 minutes bonus
+    addCheckpoint(9.98f, -7.84f, 0.5f);
+    addCheckpoint(9.95f, 22.66f, 0.5f);
 }
