@@ -19,6 +19,7 @@
 // Global definitions
 GLuint marbleTextureID = 0; // ADDED: Initialize to 0 (no texture)
 GLUquadric* sphereQuadric = nullptr;
+bool enableShadows = true; // Toggle global untuk shadow
 
 
 void drawScore() {
@@ -152,32 +153,34 @@ void display() {
 
 
     // Draw Marble's Shadow (real shadow projection)
-    glPushMatrix();
-        // Set up robust shadow projection matrix
-        GLfloat shadow_plane[4] = {0.0f, 1.0f, 0.0f, -0.01f}; // y=0.01 plane to avoid z-fighting
-        GLfloat shadow_light[4] = {10.0f, 80.0f, 10.0f, 1.0f}; // w=1 for point light
-        glShadowProjection(shadow_light, shadow_plane);
-        glTranslatef(marbleX, marbleY, marbleZ); // Use real marble position
+    if (enableShadows) {
+        glPushMatrix();
+            // Set up robust shadow projection matrix
+            GLfloat shadow_plane[4] = {0.0f, 1.0f, 0.0f, -0.01f}; // y=0.01 plane to avoid z-fighting
+            GLfloat shadow_light[4] = {10.0f, 80.0f, 10.0f, 1.0f}; // w=1 for point light
+            glShadowProjection(shadow_light, shadow_plane);
+            glTranslatef(marbleX, marbleY, marbleZ); // Use real marble position
 
-        // --- Shadow artifact fix: polygon offset and depth mask ---
-        glEnable(GL_POLYGON_OFFSET_FILL);
-        glPolygonOffset(-2.0f, -2.0f);
-        glDepthMask(GL_FALSE);
+            // --- Shadow artifact fix: polygon offset and depth mask ---
+            glEnable(GL_POLYGON_OFFSET_FILL);
+            glPolygonOffset(-2.0f, -2.0f);
+            glDepthMask(GL_FALSE);
 
-        glDisable(GL_LIGHTING); // Only disable lighting for the shadow
-        glColor4f(0.1f, 0.1f, 0.1f, 0.5f); // Shadow color, semi-transparent
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        if (sphereQuadric) {
-            gluSphere(sphereQuadric, 0.5f, 24, 16);
-        }
-        glDisable(GL_BLEND);
-        glEnable(GL_LIGHTING); // Re-enable lighting for the rest of the scene
+            glDisable(GL_LIGHTING); // Only disable lighting for the shadow
+            glColor4f(0.1f, 0.1f, 0.1f, 0.5f); // Shadow color, semi-transparent
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            if (sphereQuadric) {
+                gluSphere(sphereQuadric, 0.5f, 24, 16);
+            }
+            glDisable(GL_BLEND);
+            glEnable(GL_LIGHTING); // Re-enable lighting for the rest of the scene
 
-        // --- Restore OpenGL state ---
-        glDepthMask(GL_TRUE);
-        glDisable(GL_POLYGON_OFFSET_FILL);
-    glPopMatrix();
+            // --- Restore OpenGL state ---
+            glDepthMask(GL_TRUE);
+            glDisable(GL_POLYGON_OFFSET_FILL);
+        glPopMatrix();
+    }
 
 
     // Draw actual objects

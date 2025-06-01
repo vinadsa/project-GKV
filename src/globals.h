@@ -83,6 +83,8 @@ extern GLUquadric* sphereQuadric; // For drawing textured spheres
 
 extern int score; // Global score variable
 
+extern bool enableShadows; // Toggle global untuk shadow
+
 // Function declarations
 void initGame(); // Game initialization function
 #endif // GLOBALS_H

@@ -51,6 +51,11 @@ void normalKeysDown(unsigned char key, int x, int y) {
         extern void PrintMarblePositionForPlacement(float x, float y, float z);
         PrintMarblePositionForPlacement(marbleX, marbleY, marbleZ);
     }
+    // Toggle shadow on/off
+    if (key == 's' || key == 'S') {
+        enableShadows = !enableShadows;
+        glutPostRedisplay();
+    }
 }
 
 void normalKeysUp(unsigned char key, int x, int y) {
