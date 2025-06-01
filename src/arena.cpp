@@ -146,8 +146,70 @@ void drawCube(float centerX, float centerY, float centerZ, float sizeX, float si
 }
 
 void drawRamp(float centerX, float centerY, float centerZ, float sizeX, float sizeY, float sizeZ, char axis) {
+    // Draw shadow for the ramp FIRST (before actual ramp)
+    if (enableShadows) {
+        glPushMatrix();
+            // Set up robust shadow projection matrix (same as marble)
+            GLfloat shadow_plane[4] = {0.0f, 1.0f, 0.0f, -0.01f};
+            GLfloat shadow_light[4] = {10.0f, 80.0f, 10.0f, 1.0f};
+            extern void glShadowProjection(const float*, const float*);
+            glShadowProjection(shadow_light, shadow_plane);
+            glTranslatef(centerX, centerY, centerZ);
+            
+            // Setengah ukuran untuk kemudahan perhitungan vertex
+            float hx = sizeX / 2.0f;
+            float hy = sizeY / 2.0f; 
+            float hz = sizeZ / 2.0f;
+              glEnable(GL_POLYGON_OFFSET_FILL);
+            glPolygonOffset(-2.0f, -2.0f);
+            glDepthMask(GL_FALSE);
+            glDisable(GL_LIGHTING);
+            glDisable(GL_TEXTURE_2D); // Disable any textures
+            glColor4f(0.0f, 0.0f, 0.0f, 0.4f); // Pure black shadow
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            
+            // Simplified shadow geometry - just main surfaces
+            if (axis == 'z') {
+                float v[6][3] = {
+                    {-hx, -hy, -hz}, { hx, -hy, -hz}, {-hx, -hy,  hz}, 
+                    { hx, -hy,  hz}, {-hx,  hy,  hz}, { hx,  hy,  hz}
+                };
+                // Draw sloped surface shadow
+                glBegin(GL_QUADS);
+                glVertex3fv(v[0]); glVertex3fv(v[1]); glVertex3fv(v[5]); glVertex3fv(v[4]);
+                glEnd();
+                // Draw bottom surface shadow
+                glBegin(GL_QUADS);
+                glVertex3fv(v[0]); glVertex3fv(v[2]); glVertex3fv(v[3]); glVertex3fv(v[1]);
+                glEnd();
+            } else if (axis == 'x') {
+                float v[6][3] = {
+                    {-hx, -hy, -hz}, {-hx, -hy,  hz}, { hx, -hy, -hz}, 
+                    { hx, -hy,  hz}, { hx,  hy, -hz}, { hx,  hy,  hz}
+                };
+                // Draw sloped surface shadow
+                glBegin(GL_QUADS);
+                glVertex3fv(v[0]); glVertex3fv(v[1]); glVertex3fv(v[5]); glVertex3fv(v[4]);
+                glEnd();
+                // Draw bottom surface shadow
+                glBegin(GL_QUADS);
+                glVertex3fv(v[0]); glVertex3fv(v[2]); glVertex3fv(v[3]); glVertex3fv(v[1]);
+                glEnd();
+            }
+              glDisable(GL_BLEND);
+            glEnable(GL_LIGHTING);
+            glDepthMask(GL_TRUE);
+            glDisable(GL_POLYGON_OFFSET_FILL);
+        glPopMatrix();
+    }
+
+    // Now draw the actual ramp (with proper material colors)
     glPushMatrix();
     glTranslatef(centerX, centerY, centerZ); // Pindahkan ke pusat ramp
+    
+    // Restore proper color/material after shadow rendering
+    glColor3f(0.7f, 0.6f, 0.5f); // Ramp color (similar to cube)
 
     // Setengah ukuran untuk kemudahan perhitungan vertex
     // sizeY adalah tinggi total ramp. Puncak ramp akan di centerY + sizeY/2, dasar di centerY - sizeY/2
@@ -332,102 +394,7 @@ void drawRamp(float centerX, float centerY, float centerZ, float sizeX, float si
         glVertex3fv(v[3]); // kanan-bawah-belakang
         glVertex3fv(v[5]); // kanan-atas-belakang
         glEnd();
-    }
-
-    glPopMatrix();
-
-    // Draw shadow for the ramp (planar shadow, similar to marble and cube)
-    if (enableShadows) {
-        glPushMatrix();
-            // Set up robust shadow projection matrix (same as marble)
-            GLfloat shadow_plane[4] = {0.0f, 1.0f, 0.0f, -0.01f};
-            GLfloat shadow_light[4] = {10.0f, 80.0f, 10.0f, 1.0f};
-            extern void glShadowProjection(const float*, const float*); // Use from graphics.cpp
-            glShadowProjection(shadow_light, shadow_plane);
-            glTranslatef(centerX, centerY, centerZ);
-            // ...repeat ramp orientation if needed...
-            glEnable(GL_POLYGON_OFFSET_FILL);
-            glPolygonOffset(-2.0f, -2.0f);
-            glDepthMask(GL_FALSE);
-            glDisable(GL_LIGHTING);
-            glColor4f(0.1f, 0.1f, 0.1f, 0.5f);
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            if (axis == 'z') {
-                float v[6][3] = {
-                    {-hx, -hy, -hz}, { hx, -hy, -hz}, {-hx, -hy,  hz}, { hx, -hy,  hz}, {-hx,  hy,  hz}, { hx,  hy,  hz}
-                };
-                float norm_slope_x = 0;
-                float norm_slope_y = sizeX * sizeZ;
-                float norm_slope_z = -sizeX * sizeY;
-                float len_slope = sqrt(norm_slope_y*norm_slope_y + norm_slope_z*norm_slope_z);
-                if (len_slope > 1e-6) {
-                    norm_slope_y /= len_slope;
-                    norm_slope_z /= len_slope;
-                }
-                glBegin(GL_QUADS);
-                glNormal3f(norm_slope_x, norm_slope_y, norm_slope_z);
-                glVertex3fv(v[0]); glVertex3fv(v[1]); glVertex3fv(v[5]); glVertex3fv(v[4]);
-                glEnd();
-                glBegin(GL_QUADS);
-                glNormal3f(0.0f, -1.0f, 0.0f);
-                glVertex3fv(v[0]); glVertex3fv(v[2]); glVertex3fv(v[3]); glVertex3fv(v[1]);
-                glEnd();
-                glBegin(GL_QUADS);
-                glNormal3f(0.0f, 0.0f, 1.0f);
-                glVertex3fv(v[2]); glVertex3fv(v[3]); glVertex3fv(v[5]); glVertex3fv(v[4]);
-                glEnd();
-                glBegin(GL_TRIANGLES);
-                glNormal3f(-1.0f, 0.0f, 0.0f);
-                glVertex3fv(v[0]); glVertex3fv(v[4]); glVertex3fv(v[2]);
-                glEnd();
-                glBegin(GL_TRIANGLES);
-                glNormal3f(1.0f, 0.0f, 0.0f);
-                glVertex3fv(v[1]); glVertex3fv(v[3]); glVertex3fv(v[5]);
-                glEnd();
-            } else if (axis == 'x') {
-                float v[6][3] = {
-                    {-hx, -hy, -hz}, {-hx, -hy,  hz}, { hx, -hy, -hz}, { hx, -hy,  hz}, { hx,  hy, -hz}, { hx,  hy,  hz}
-                };
-                float norm_slope_x = sizeZ * sizeY;
-                float norm_slope_y = -sizeZ * sizeX;
-                float norm_slope_z = 0;
-                float len_slope = sqrt(norm_slope_x*norm_slope_x + norm_slope_y*norm_slope_y);
-                if (len_slope > 1e-6) {
-                    norm_slope_x /= len_slope;
-                    norm_slope_y /= len_slope;
-                }
-                if (norm_slope_y < 0) {
-                    norm_slope_x *= -1;
-                    norm_slope_y *= -1;
-                }
-                glBegin(GL_QUADS);
-                glNormal3f(norm_slope_x, norm_slope_y, norm_slope_z);
-                glVertex3fv(v[0]); glVertex3fv(v[1]); glVertex3fv(v[5]); glVertex3fv(v[4]);
-                glEnd();
-                glBegin(GL_QUADS);
-                glNormal3f(0.0f, -1.0f, 0.0f);
-                glVertex3fv(v[0]); glVertex3fv(v[2]); glVertex3fv(v[3]); glVertex3fv(v[1]);
-                glEnd();
-                glBegin(GL_QUADS);
-                glNormal3f(1.0f, 0.0f, 0.0f);
-                glVertex3fv(v[2]); glVertex3fv(v[3]); glVertex3fv(v[5]); glVertex3fv(v[4]);
-                glEnd();
-                glBegin(GL_TRIANGLES);
-                glNormal3f(0.0f, 0.0f, -1.0f);
-                glVertex3fv(v[0]); glVertex3fv(v[4]); glVertex3fv(v[2]);
-                glEnd();
-                glBegin(GL_TRIANGLES);
-                glNormal3f(0.0f, 0.0f, 1.0f);
-                glVertex3fv(v[1]); glVertex3fv(v[3]); glVertex3fv(v[5]);
-                glEnd();
-            }
-            glDisable(GL_BLEND);
-            glEnable(GL_LIGHTING);
-            glDepthMask(GL_TRUE);
-            glDisable(GL_POLYGON_OFFSET_FILL);
-        glPopMatrix();
-    }
+    }    glPopMatrix();
 }
 
 
