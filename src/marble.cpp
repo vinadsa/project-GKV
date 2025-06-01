@@ -39,44 +39,37 @@ void drawMarble() {
     glRotatef(totalRotationAngleX, 1.0f, 0.0f, 0.0f);
     glRotatef(totalRotationAngleZ, 0.0f, 0.0f, 1.0f);    
     
-    if (marbleTextureID != 0 && sphereQuadric != nullptr) {
-        // For textured marble: disable GL_COLOR_MATERIAL temporarily to use explicit materials
-        glDisable(GL_COLOR_MATERIAL);
-        
-        // Set material properties that preserve texture visibility
-        GLfloat marble_ambient[] = {0.6f, 0.6f, 0.6f, 1.0f};    // Higher ambient to preserve texture
-        GLfloat marble_diffuse[] = {1.0f, 1.0f, 1.0f, 1.0f};    // White diffuse for pure texture colors
-        GLfloat marble_specular[] = {0.3f, 0.3f, 0.3f, 1.0f};   // Reduced specular to prevent washout
-        GLfloat marble_shininess = 30.0f;                        // Lower shininess
-        
-        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, marble_ambient);
-        glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, marble_diffuse);
-        glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, marble_specular);
-        glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, marble_shininess);
-        
-        glEnable(GL_TEXTURE_2D);
-        glBindTexture(GL_TEXTURE_2D, marbleTextureID);
+    // Enable texturing
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, marbleTextureID); // Bind the loaded marble texture
 
-        gluSphere(sphereQuadric, 0.5, 32, 32); // Draw sphere with texture
+    // Disable color material when using textures to ensure material properties are used correctly
+    glDisable(GL_COLOR_MATERIAL);
 
-        glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture
-        glDisable(GL_TEXTURE_2D);
-        
-        // Re-enable GL_COLOR_MATERIAL for other objects
-        glEnable(GL_COLOR_MATERIAL);
+    // Set material properties for the textured marble
+    GLfloat marble_ambient[] = {0.8f, 0.8f, 0.8f, 1.0f}; // Ambient should be high if texture is pre-lit or to make it generally bright
+    GLfloat marble_diffuse[] = {1.0f, 1.0f, 1.0f, 1.0f}; // Diffuse to 1 means texture color is fully used
+    GLfloat marble_specular[] = {0.7f, 0.7f, 0.7f, 1.0f}; // Moderate specular highlight
+    GLfloat marble_shininess = 50.0f;                     // Moderate shininess
+
+    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, marble_ambient);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, marble_diffuse);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, marble_specular);
+    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, marble_shininess);
+    
+    if (sphereQuadric != nullptr) { // Check if sphereQuadric is initialized
+        gluSphere(sphereQuadric, 0.5, 32, 32); // Draw sphere using quadric (which should have texture coords enabled)
     } else {
-        // For untextured marble: use GL_COLOR_MATERIAL with glColor
-        glColor3f(0.9f, 0.7f, 0.5f); // Marble-like color (this will set ambient and diffuse due to GL_COLOR_MATERIAL)
-        
-        // Set only specular and shininess explicitly
-        GLfloat marble_specular[] = {1.0f, 1.0f, 1.0f, 1.0f};   // High specular for shininess
-        GLfloat marble_shininess = 80.0f;                        // High shininess value
-        
-        glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, marble_specular);
-        glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, marble_shininess);
-        
-        glutSolidSphere(0.5, 32, 32);
+        // Fallback if quadric is not available (though it should be)
+        // This fallback won't be textured correctly without manual tex coord generation
+        glColor3f(0.9f, 0.7f, 0.5f); // Fallback color
+        glutSolidSphere(0.5, 32, 32); 
     }
+
+    // Disable texturing and re-enable color material for other objects if needed
+    glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture
+    glDisable(GL_TEXTURE_2D);
+    glEnable(GL_COLOR_MATERIAL); // Re-enable for other objects that might use it
 
     glPopMatrix();
 }

@@ -7,16 +7,17 @@
 #include "utils.h"    // For degToRad
 #include "checkpoint.h" // For drawCheckpoints
 #include "timer.h"      // Added for timer functionality
+#include "imageloader.h" // ADDED: For loading BMP images
 #include <GL/glut.h>
 #include <GL/glu.h>   // For gluSphere, GLUquadric, gluBuild2DMipmaps
 #include <cmath>     // For cos, sin
 #include <iostream>  // For std::cout, std::cerr
 #include <string> // For std::string
 // #define STB_IMAGE_IMPLEMENTATION // Define this in exactly one .c or .cpp file
-#include "stb_image.h"         // For loading images
+// #include "stb_image.h"         // For loading images
 
 // Global definitions
-GLuint marbleTextureID = 0; // Initialize to 0 (no texture)
+GLuint marbleTextureID = 0; // ADDED: Initialize to 0 (no texture)
 GLUquadric* sphereQuadric = nullptr;
 
 
@@ -88,46 +89,6 @@ void updateDynamicLighting() {
         1.0f
     };
     glLightfv(GL_LIGHT0, GL_DIFFUSE, light0_diffuse);
-}
-
-// Function to load a texture
-bool loadTexture(const char* filename, GLuint& textureID_ref) {
-    int width, height, channels;
-    unsigned char* data = stbi_load(filename, &width, &height, &channels, 0);
-    if (!data) {
-        std::cerr << "Failed to load texture: " << filename << " - " << stbi_failure_reason() << std::endl;
-        return false;
-    }
-
-    glGenTextures(1, &textureID_ref);
-    glBindTexture(GL_TEXTURE_2D, textureID_ref);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    GLenum format = GL_RGB;
-    if (channels == 4) {
-        format = GL_RGBA;
-    } else if (channels == 3) {
-        format = GL_RGB;
-    } else {
-        std::cerr << "Unsupported image format (channels: " << channels << ") for " << filename << std::endl;
-        stbi_image_free(data);
-        glDeleteTextures(1, &textureID_ref); // Clean up generated texture ID
-        textureID_ref = 0;
-        return false;
-    }
-
-    // Use gluBuild2DMipmaps for compatibility with older OpenGL contexts often used with GLUT
-    gluBuild2DMipmaps(GL_TEXTURE_2D, format, width, height, format, GL_UNSIGNED_BYTE, data);
-
-    stbi_image_free(data);
-    glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture
-
-    std::cout << "Texture loaded successfully: " << filename << std::endl;
-    return true;
 }
 
 // Replace glShadowProjection with robust version for a plane and point light
@@ -259,6 +220,7 @@ void timer(int value) {
 }
 
 void initGraphics() {
+    glClearColor(0.6f, 0.8f, 1.0f, 1.0f); // ADDED: Set sky blue background
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_LIGHTING);
     glEnable(GL_COLOR_MATERIAL);
@@ -317,20 +279,23 @@ void initGraphics() {
     GLfloat fogColor[] = {0.4f, 0.7f, 0.9f, 1.0f}; // Match sky color
     glFogfv(GL_FOG_COLOR, fogColor);
     glFogf(GL_FOG_MODE, GL_LINEAR);
-    glFogf(GL_FOG_START, 50.0f);  // Fog starts at distance 50
-    glFogf(GL_FOG_END, 200.0f);   // Fog is fully opaque at distance 200
-    glFogf(GL_FOG_DENSITY, 0.02f); // Fog density (used with GL_EXP/GL_EXP2)
-    
-    glClearColor(0.4f, 0.7f, 0.9f, 1.0f); // Slightly darker sky blue for better contrast
+    glFogf(GL_FOG_START, 50.0f);    glFogf(GL_FOG_END, 200.0f);    glFogf(GL_FOG_DENSITY, 0.02f);
 
-    // Load marble texture
-    // Ensure the path is correct relative to your executable's working directory
-    // or use an absolute path if necessary.
-    // If your executable runs from project_GKV/src, then "textures/marble_texture.png" is correct.
-    // If it runs from project_GKV, then "src/textures/marble_texture.png" would be needed.
-    // For simplicity, assuming it runs from where graphics.cpp can see "textures/marble_texture.png"
-    if (!loadTexture("textures/marble_texture.png", marbleTextureID)) {
-        std::cerr << "Marble texture not loaded. Marble will be untextured." << std::endl;
+    // Load marble texture using imageloader
+    Image* image = loadBMP("textures/marble_texture.bmp"); // MODIFIED: Path to texture in src/textures
+    if (image == nullptr) {
+        std::cerr << "Failed to load marble texture using imageloader." << std::endl;
+    } else {
+        glGenTextures(1, &marbleTextureID);
+        glBindTexture(GL_TEXTURE_2D, marbleTextureID);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image->width, image->height, 0, GL_RGB, GL_UNSIGNED_BYTE, image->pixels);
+        glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture
+        delete image; // Free image data
+        std::cout << "Marble texture loaded successfully using imageloader." << std::endl;
     }
 
     // Initialize quadric for sphere

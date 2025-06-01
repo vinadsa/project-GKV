@@ -78,7 +78,7 @@ extern std::vector<Vec3> checkpoints;
 extern int activeCheckpointIndex;
 extern std::vector<bool> checkpointCollected; // Track which checkpoints have been collected
 
-extern GLuint marbleTextureID; // For the marble texture
+extern GLuint marbleTextureID; // ADDED: For marble texture
 extern GLUquadric* sphereQuadric; // For drawing textured spheres
 
 extern int score; // Global score variable
