@@ -35,15 +35,16 @@ void checkCheckpointCollision() {
         Vec3 cp = checkpoints[i];
         float cpGroundH, dummyNX, dummyNY, dummyNZ;
         getArenaHeightAndNormal(cp.x, cp.z, cpGroundH, dummyNX, dummyNY, dummyNZ);
-        float cpY = cpGroundH + 0.5f;
-
+        float cpY = cpGroundH + 0.5f;        // Calculate 3D distance between marble and checkpoint
         float dx = marbleX - cp.x;
         float dz = marbleZ - cp.z;
-        float distSq = dx * dx + dz * dz;
-
-        if (distSq < checkpointRadius * checkpointRadius) {
-            float marbleCurrentY = getArenaHeight(marbleX, marbleZ) + 0.5f;
-            if (fabs(marbleCurrentY - cpY) < 2.0f) {
+        float dy = marbleY - cpY;
+        float dist3D = sqrt(dx * dx + dy * dy + dz * dz);
+        
+        // Collision radius is the sum of marble radius and checkpoint radius
+        float collisionRadius = marbleRadius + (marbleRadius * 0.5f); // checkpoint radius is marbleRadius * 0.5f
+        
+        if (dist3D < collisionRadius) {
                 // Mark this checkpoint as collected
                 checkpointCollected[i] = true;
                 // Update spawn point to this checkpoint (highest index collected becomes spawn)
@@ -61,12 +62,10 @@ void checkCheckpointCollision() {
                 } else {
                     std::cout << "Spawn checkpoint collected (no score). Spawn point updated." << std::endl;
                 }
-                
-                recordCheckpointTime(); // Call function to record checkpoint time
+                  recordCheckpointTime(); // Call function to record checkpoint time
             }
         }
     }
-}
 
 void drawCheckpoints() {
     // Aktifkan blending untuk checkpoint yang sudah diambil (transparan)

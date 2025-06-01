@@ -728,8 +728,9 @@ void getArenaHeightAndNormalAt(float x, float y, float z, float& height, float& 
     const float epsilon = 0.015f;
     const float epsilon_normal_Y_diff = 0.05f;
     const float wall_like_threshold_Y = 0.5f;
-    float current_best_h = height;
+        float current_best_h = height;
     float current_best_nx = outNormalX, current_best_ny = outNormalY, current_best_nz = outNormalZ;
+    
     // Check all cubes
     for (const auto& c : cubes) {
         float minX = c.x - c.sizeX / 2.0f;
@@ -817,11 +818,16 @@ void getArenaHeightAndNormalAt(float x, float y, float z, float& height, float& 
                     obj_nx = -r.sizeY; obj_ny = r.sizeX; obj_nz = 0;
                 }
                 obj_h = baseY + progress * r.sizeY;
-                // No y check here in 2D version
-                float len = sqrt(obj_nx*obj_nx + obj_ny*obj_ny + obj_nz*obj_nz);
-                if (len > 1e-6) { obj_nx /= len; obj_ny /= len; obj_nz /= len; }
-                if (obj_ny < 0) { obj_nx *= -1; obj_ny *= -1; obj_nz *= -1; }
-                obj_is_wall = (obj_ny < wall_like_threshold_Y);
+                // Add height check to prevent collision when marble is below ramp surface
+                if (y >= obj_h - epsilon) {
+                    float len = sqrt(obj_nx*obj_nx + obj_ny*obj_ny + obj_nz*obj_nz);
+                    if (len > 1e-6) { obj_nx /= len; obj_ny /= len; obj_nz /= len; }
+                    if (obj_ny < 0) { obj_nx *= -1; obj_ny *= -1; obj_nz *= -1; }
+                    obj_is_wall = (obj_ny < wall_like_threshold_Y);
+                } else {
+                    // Marble is below ramp surface, no collision
+                    obj_h = -1.0f;
+                }
             } else {
                 if (r.axis == 'z') {
                     if (fabs(x - minX) < epsilon && (z >= minZ - epsilon && z <= maxZ + epsilon)) {
