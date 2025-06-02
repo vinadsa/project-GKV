@@ -1,6 +1,7 @@
 #ifndef ARENA_H
 #define ARENA_H
 
+
 // Function Declarations for arena
 void setupArenaGeometry();
 void drawCube(float centerX, float centerY, float centerZ, float sizeX, float sizeY, float sizeZ);
@@ -12,4 +13,5 @@ void drawGround();
 float getArenaHeightAt(float x, float y, float z);
 void getArenaHeightAndNormalAt(float x, float y, float z, float& outHeight, float& outNormalX, float& outNormalY, float& outNormalZ);
 
+void drawTree(float x, float y, float z, float trunkHeight, float trunkRadius, float foliageRadius);
 #endif // ARENA_H

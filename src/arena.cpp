@@ -39,9 +39,16 @@ struct ArenaRamp {
 struct ArenaBush {
     float x, y, z, radius;
 };
+struct ArenaTree {
+    float x, y, z;
+    float trunkHeight, trunkRadius;
+    float foliageRadius;
+};
+
 std::vector<ArenaCube> cubes;
 std::vector<ArenaRamp> ramps;
 std::vector<ArenaBush> bushes;
+std::vector<ArenaTree> trees;
 
 void CreateCube(float x, float y, float z, float sizeX, float sizeY, float sizeZ) {
     cubes.push_back({x, y, z, sizeX, sizeY, sizeZ});
@@ -102,6 +109,12 @@ void CreateRamp(float x, float y, float z, float sizeX, float sizeY, float sizeZ
 void CreateBush(float x, float y, float z, float radius) {
     bushes.push_back({x, y, z, radius});
     // Note: Bushes don't need collision since they are decorative only
+    // No need to update arenaHeights array
+}
+
+void CreateTree(float x, float y, float z, float trunkHeight, float trunkRadius, float foliageRadius) {
+    trees.push_back({x, y, z, trunkHeight, trunkRadius, foliageRadius});
+    // Note: Trees don't need collision since they are decorative only
     // No need to update arenaHeights array
 }
 
@@ -399,7 +412,7 @@ void drawRamp(float centerX, float centerY, float centerZ, float sizeX, float si
 
 
 void setupArenaGeometry() {
-    cubes.clear(); ramps.clear(); bushes.clear();
+    cubes.clear(); ramps.clear(); bushes.clear(); trees.clear();
     // Contoh penggunaan:
     // CreateCube(0.0f, 2.0f, 5.0f, 2.0f, 2.0f, 2.0f); // Cube di tengah
     // CreateRamp(0.0f, 1.0f, 2.5f, 2.0f, 2.0f, 3.0f, 'z'); // Ramp ke cube
@@ -435,6 +448,17 @@ void setupArenaGeometry() {
     CreateBush(-1.44f, 0.50f, 28.83f, 0.7f);
     CreateBush(20.71f, 0.50f, -12.45f, 0.7f);
 
+    
+    CreateTree(21.71f, 0.30f, -10.45f, 10.0f, 0.2f, 1.5f); // Another tree
+    CreateTree(6.71f, 0.30f, -10.45f, 7.0f, 0.2f, 1.5f); // Another tree
+    CreateTree(15.71f, 0.30f, 9.45f, 5.0f, 0.2f, 1.5f); // Another tree
+    CreateTree(-5.71f, 0.30f, 27.45f, 5.0f, 0.2f, 1.5f); // Another tree
+    CreateTree(-7.71f, 0.30f, 27.45f, 5.0f, 0.2f, 1.5f); // Another tree
+    CreateTree(-10.71f, 0.30f, 27.45f, 5.0f, 0.2f, 1.5f); // Another tree
+    CreateTree(-11.71f, 0.30f, -14.45f, 5.0f, 0.2f, 1.5f); // Another tree
+    CreateTree(-13.71f, 0.30f, -14.45f, 5.0f, 0.2f, 1.5f); // Another tree
+    CreateTree(14.71f, 0.30f, -21.45f, 5.0f, 0.2f, 1.5f); // Another tree
+    CreateTree(14.71f, 0.30f, -27.45f, 5.0f, 0.2f, 1.5f); // Another tree
 
     // Developer bisa tambah sendiri: CreateCube(...), CreateRamp(...), CreateBush(...)
 }
@@ -850,6 +874,7 @@ void PrintMarblePositionForPlacement(float x, float y, float z) {
     printf("CreateCube(%.2ff, %.2ff, %.2ff, sizeX, sizeY, sizeZ);\n", x, y, z);
     printf("CreateRamp(%.2ff, %.2ff, %.2ff, sizeX, sizeY, sizeZ, 'axis');\n", x, y, z);
     printf("CreateBush(%.2ff, %.2ff, %.2ff, radius);\n", x, y, z);
+    printf("CreateTree(%.2ff, %.2ff, %.2ff, trunkHeight, trunkRadius, foliageRadius);\n", x, y, z);
     printf("addCheckpoint(%.2ff, %.2ff, bonusMinutes);\n", x, z);
     printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
 }
@@ -909,7 +934,36 @@ void drawGround() {
     for (const auto& b : bushes) {
         drawBush(b.x, b.y, b.z, b.radius);
     }
+    // Draw trees (decorative only)
+    for (const auto& t : trees) {
+        drawTree(t.x, t.y, t.z, t.trunkHeight, t.trunkRadius, t.foliageRadius);
+    }
+
+
 }
+
+
+
+
+void drawTree(float x, float y, float z, float trunkHeight, float trunkRadius, float foliageRadius) {
+    // Draw trunk
+    glColor3f(0.5f, 0.3f, 0.0f); // Brown
+    glPushMatrix();
+    glTranslatef(x, y, z);
+    glRotatef(-90, 1, 0, 0); // Orient the cylinder along the Y axis
+    GLUquadric *quad = gluNewQuadric();
+    gluCylinder(quad, trunkRadius, trunkRadius, trunkHeight, 10, 10);
+    gluDeleteQuadric(quad);
+    glPopMatrix();
+
+    // Draw foliage
+    glColor3f(0.0f, 0.7f, 0.0f); // Green
+    glPushMatrix();
+    glTranslatef(x, y + trunkHeight, z);
+    glutSolidSphere(foliageRadius, 10, 10);
+    glPopMatrix();
+}
+
 
 void drawBush(float centerX, float centerY, float centerZ, float radius) {
     // Set material properties for bush (green, plant-like)
