@@ -1,20 +1,20 @@
 #include "graphics.h"
 #include "globals.h"
-#include "arena.h"    // For drawGround, getArenaHeightAndNormal
-#include "marble.h"   // For drawMarble, marbleX, marbleZ (accessing via globals)
-#include "camera.h"   // For camera variables (accessing via globals)
-#include "physics.h"  // For updatePhysics
-#include "utils.h"    // For degToRad
-#include "checkpoint.h" // For drawCheckpoints
-#include "timer.h"      // Added for timer functionality
-#include "imageloader.h" // ADDED: For loading BMP images
+#include "arena.h"   
+#include "marble.h"  
+#include "camera.h"  
+#include "physics.h"  
+#include "utils.h"   
+#include "checkpoint.h" 
+#include "timer.h"     
+#include "imageloader.h" 
 #include <GL/glut.h>
-#include <GL/glu.h>   // For gluSphere, GLUquadric, gluBuild2DMipmaps
-#include <cmath>     // For cos, sin
-#include <iostream>  // For std::cout, std::cerr
-#include <string> // For std::string
-// #define STB_IMAGE_IMPLEMENTATION // Define this in exactly one .c or .cpp file
-// #include "stb_image.h"         // For loading images
+#include <GL/glu.h>  
+#include <cmath>   
+#include <iostream>  
+#include <string> 
+
+
 
 // Global definitions
 GLuint marbleTextureID = 0; // ADDED: Initialize to 0 (no texture)
@@ -155,43 +155,42 @@ void display() {
     // Draw Marble's Shadow (real shadow projection)
     if (enableShadows) {
         glPushMatrix();
-            // Set up robust shadow projection matrix
             GLfloat shadow_plane[4] = {0.0f, 1.0f, 0.0f, -0.01f}; // y=0.01 plane to avoid z-fighting
             GLfloat shadow_light[4] = {10.0f, 80.0f, 10.0f, 1.0f}; // w=1 for point light
             glShadowProjection(shadow_light, shadow_plane);
             glTranslatef(marbleX, marbleY, marbleZ); // Use real marble position
 
-            // --- Shadow artifact fix: polygon offset and depth mask ---
             glEnable(GL_POLYGON_OFFSET_FILL);
             glPolygonOffset(-2.0f, -2.0f);
             glDepthMask(GL_FALSE);
 
-            glDisable(GL_LIGHTING); // Only disable lighting for the shadow
-            glColor4f(0.1f, 0.1f, 0.1f, 0.5f); // Shadow color, semi-transparent
+            glDisable(GL_LIGHTING); 
+            glColor4f(0.1f, 0.1f, 0.1f, 0.5f); 
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             if (sphereQuadric) {
                 gluSphere(sphereQuadric, 0.5f, 24, 16);
             }
             glDisable(GL_BLEND);
-            glEnable(GL_LIGHTING); // Re-enable lighting for the rest of the scene
+            glEnable(GL_LIGHTING); 
 
-            // --- Restore OpenGL state ---
             glDepthMask(GL_TRUE);
             glDisable(GL_POLYGON_OFFSET_FILL);
         glPopMatrix();
     }
 
 
-    // Draw actual objects
     drawMarble(); // The actual marble
     drawCheckpoints();
+    drawFinish(); // Tambahkan ini untuk menggambar finish
     drawScore(); // Draw the score on the screen
+    drawCongratulationsPopup(); // Tampilkan pop up jika finish tercapai
 
-    // Display the timer
     int screenWidth = glutGet(GLUT_WINDOW_WIDTH);
     int screenHeight = glutGet(GLUT_WINDOW_HEIGHT);
     displayTimer(screenWidth, screenHeight);
+
+    drawCongratulationsPopup();
 
     glutSwapBuffers();
 }
@@ -210,20 +209,17 @@ void timer(int value) {
     updatePhysics();
     updateTimer(); // Add this line to update the timer every frame
     
-    // Check if countdown timer has expired
     if (isCountdownExpired()) {
         std::cout << "Time's up! Game Over!" << std::endl;
-        // Optionally reset the game or show game over screen
-        // For now, we'll just restart the game
         initGame();
     }
     
     glutPostRedisplay();
-    glutTimerFunc(16, timer, 0); // ~60 FPS
+    glutTimerFunc(16, timer, 0); 
 }
 
 void initGraphics() {
-    glClearColor(0.6f, 0.8f, 1.0f, 1.0f); // ADDED: Set sky blue background
+    glClearColor(0.6f, 0.8f, 1.0f, 1.0f); 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_LIGHTING);
     glEnable(GL_COLOR_MATERIAL);
@@ -284,8 +280,7 @@ void initGraphics() {
     glFogf(GL_FOG_MODE, GL_LINEAR);
     glFogf(GL_FOG_START, 50.0f);    glFogf(GL_FOG_END, 200.0f);    glFogf(GL_FOG_DENSITY, 0.02f);
 
-    // Load marble texture using imageloader
-    Image* image = loadBMP("textures/marble_texture.bmp"); // MODIFIED: Path to texture in src/textures
+    Image* image = loadBMP("textures/marble_texture.bmp"); 
     if (image == nullptr) {
         std::cerr << "Failed to load marble texture using imageloader." << std::endl;
     } else {
@@ -309,4 +304,76 @@ void initGraphics() {
     } else {
         std::cerr << "Failed to create GLUquadric object." << std::endl;
     }
+}
+
+void drawCongratulationsPopup() {
+    extern bool finishReached;
+    if (!finishReached) return;
+    int width = glutGet(GLUT_WINDOW_WIDTH);
+    int height = glutGet(GLUT_WINDOW_HEIGHT);
+    const char* lines[] = {"CONGRATULATIONS!", "You finished the level!"};
+    int numLines = 2;
+    // Tambahkan skor ke dalam string
+    char scoreLine[64];
+    snprintf(scoreLine, sizeof(scoreLine), "Your Score: %d", score);
+    // Setup ortho projection supaya text selalu di posisi layar
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    gluOrtho2D(0, width, 0, height);
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+    // Draw semi-transparent background rectangle
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_LIGHTING);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glColor4f(0.0f, 0.0f, 0.0f, 0.7f);
+    int boxW = 420, boxH = 160;
+    int boxX = width/2 - boxW/2, boxY = height/2 - boxH/2;
+    glBegin(GL_QUADS);
+        glVertex2i(boxX, boxY);
+        glVertex2i(boxX + boxW, boxY);
+        glVertex2i(boxX + boxW, boxY + boxH);
+        glVertex2i(boxX, boxY + boxH);
+    glEnd();
+    // Draw congratulation text, centered per line
+    glColor3f(1.0f, 1.0f, 0.0f);
+    void* font = GLUT_BITMAP_HELVETICA_18;
+    int lineHeight = 36;
+    // Tampilkan dua baris utama
+    for (int i = 0; i < numLines; ++i) {
+        int textWidth = glutBitmapLength(font, (const unsigned char*)lines[i]);
+        int textX = width/2 - textWidth/2;
+        int textY = height/2 + (numLines)*lineHeight/2 - i*lineHeight + 8;
+        if (textX < boxX + 10) textX = boxX + 10;
+        if (textX + textWidth > boxX + boxW - 10) textX = boxX + boxW - 10 - textWidth;
+        if (textY < boxY + 20) textY = boxY + 20;
+        if (textY > boxY + boxH - 20) textY = boxY + boxH - 20;
+        glRasterPos2i(textX, textY);
+        for (const char* p = lines[i]; *p; ++p) {
+            glutBitmapCharacter(font, *p);
+        }
+    }
+    // Tampilkan skor di bawahnya
+    int scoreTextWidth = glutBitmapLength(font, (const unsigned char*)scoreLine);
+    int scoreTextX = width/2 - scoreTextWidth/2;
+    int scoreTextY = height/2 - (numLines)*lineHeight/2 + 8;
+    if (scoreTextX < boxX + 10) scoreTextX = boxX + 10;
+    if (scoreTextX + scoreTextWidth > boxX + boxW - 10) scoreTextX = boxX + boxW - 10 - scoreTextWidth;
+    if (scoreTextY < boxY + 20) scoreTextY = boxY + 20;
+    if (scoreTextY > boxY + boxH - 20) scoreTextY = boxY + boxH - 20;
+    glColor3f(0.4f, 1.0f, 0.4f);
+    glRasterPos2i(scoreTextX, scoreTextY);
+    for (const char* p = scoreLine; *p; ++p) {
+        glutBitmapCharacter(font, *p);
+    }
+    glDisable(GL_BLEND);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_LIGHTING);
+    glPopMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
 }

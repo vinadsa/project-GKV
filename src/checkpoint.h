@@ -1,11 +1,14 @@
 #ifndef CHECKPOINT_H
 #define CHECKPOINT_H
 
-#include "globals.h" // For Vec3, std::vector
+#include "globals.h" 
 
-void addCheckpoint(float x, float z, float bonusMinutes = 1.0f); // Add bonus time parameter
+void addCheckpoint(float x, float z, float bonusMinutes = 1.0f);
 void checkCheckpointCollision();
-void resetMarble(); // Centralized reset logic
-void setupCheckpoints(); // To add all checkpoints in one place
+void resetMarble(); 
+void setupCheckpoints(); 
 void drawCheckpoints();
+void addFinish(float x, float z);
+void checkFinishCollision();
+void drawFinish();
 #endif // CHECKPOINT_H

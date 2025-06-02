@@ -6,8 +6,8 @@ void reshape(int w, int h);
 void timer(int value);
 void initGraphics(); // For OpenGL specific initializations
 void updateDynamicLighting(); // Update lighting based on marble position
+void drawCongratulationsPopup(); // Menampilkan pop up UI di dalam game
 
-// Forward declaration for initGame function
 void initGame();
 
 #endif // GRAPHICS_H

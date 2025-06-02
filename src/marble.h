@@ -2,6 +2,6 @@
 #define MARBLE_H
 
 void drawMarble();
-void resetMarbleInitialState(); // Renamed to avoid conflict with checkpoint's resetMarble logic
+void resetMarbleInitialState(); 
 
 #endif // MARBLE_H

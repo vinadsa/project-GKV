@@ -1,17 +1,17 @@
 #include "checkpoint.h"
-#include "globals.h" // Sekarang menyertakan checkpointRadius, Vec3, std::vector, BOUNDS
-#include "arena.h"   // For getArenaHeightAndNormal
-#include "marble.h"  // For marbleX, marbleZ, etc. (accessing via globals)
-#include "timer.h"   // Added to access recordCheckpointTime()
+#include "globals.h" 
+#include "arena.h"   
+#include "marble.h" 
+#include "timer.h"  
 #include <vector>
-#include <cmath>     // For fabs, sqrt
-#include <iostream>  // For std::cout
+#include <cmath>    
+#include <iostream> 
 #include <GL/glut.h>
 
 // Variabel global dari globals.h yang terutama terkait checkpoint
 std::vector<Vec3> checkpoints;
 int activeCheckpointIndex = -1;
-std::vector<bool> checkpointCollected; // Track which checkpoints have been collected
+std::vector<bool> checkpointCollected; 
 
 
 void addCheckpoint(float x, float z, float bonusMinutes) {
@@ -20,14 +20,12 @@ void addCheckpoint(float x, float z, float bonusMinutes) {
     data.bonusMinutes = bonusMinutes;
     
     checkpointData.push_back(data);
-    checkpoints.push_back({x, 0.0f, z}); // Keep backward compatibility
-    checkpointCollected.push_back(false); // Initialize as not collected
+    checkpoints.push_back({x, 0.0f, z}); 
+    checkpointCollected.push_back(false); 
 }
 
 void checkCheckpointCollision() {
-    // Check all checkpoints, not just those after activeCheckpointIndex
     for (int i = 0; i < checkpoints.size(); ++i) {
-        // Skip if this checkpoint is already collected
         if (checkpointCollected[i]) {
             continue;
         }
@@ -35,26 +33,21 @@ void checkCheckpointCollision() {
         Vec3 cp = checkpoints[i];
         float cpGroundH, dummyNX, dummyNY, dummyNZ;
         getArenaHeightAndNormal(cp.x, cp.z, cpGroundH, dummyNX, dummyNY, dummyNZ);
-        float cpY = cpGroundH + 0.5f;        // Calculate 3D distance between marble and checkpoint
+        float cpY = cpGroundH + 0.5f;       
         float dx = marbleX - cp.x;
         float dz = marbleZ - cp.z;
         float dy = marbleY - cpY;
         float dist3D = sqrt(dx * dx + dy * dy + dz * dz);
         
-        // Collision radius is the sum of marble radius and checkpoint radius
-        float collisionRadius = marbleRadius + (marbleRadius * 0.5f); // checkpoint radius is marbleRadius * 0.5f
+        float collisionRadius = marbleRadius + (marbleRadius * 0.5f); 
         
         if (dist3D < collisionRadius) {
-                // Mark this checkpoint as collected
                 checkpointCollected[i] = true;
-                // Update spawn point to this checkpoint (highest index collected becomes spawn)
                 if (i > activeCheckpointIndex) {
                     activeCheckpointIndex = i;
                 }
-                  // Only give score if this is NOT the first checkpoint (spawn point)
                 if (i > 0) {
-                    score += 100; // Increment score for hitting a checkpoint
-                    // Add bonus time to countdown
+                    score += 100; 
                     double bonusSeconds = checkpointData[i].bonusMinutes * 60.0;
                     addTimeToCountdown(bonusSeconds);
                     std::cout << "Checkpoint " << i + 1 << " collected! Score +100. Time +" 
@@ -62,7 +55,7 @@ void checkCheckpointCollision() {
                 } else {
                     std::cout << "Spawn checkpoint collected (no score). Spawn point updated." << std::endl;
                 }
-                  recordCheckpointTime(); // Call function to record checkpoint time
+                  recordCheckpointTime();
             }
         }
     }
@@ -127,7 +120,6 @@ void resetMarble() {
         std::cout << "Resetting to Checkpoint " << activeCheckpointIndex + 1 << std::endl;
     } else if (!checkpoints.empty()) {
         resetPos = checkpoints[0];
-        // Only set activeCheckpointIndex = 0 if no checkpoints have been collected yet
         bool anyCheckpointCollected = false;
         for (bool collected : checkpointCollected) {
             if (collected) {
@@ -136,13 +128,12 @@ void resetMarble() {
             }
         }
         if (!anyCheckpointCollected) {
-            activeCheckpointIndex = 0; // Set to 0 since we're spawning at the first checkpoint
+            activeCheckpointIndex = 0; 
         }
         std::cout << "Resetting to Start (Checkpoint 1)" << std::endl;
     } else {
-        // Fallback if no checkpoints are added - use a hardcoded start from marble.cpp's initial state idea
-        resetPos = {0.0f, 0.0f, -BOUNDS + 2.0f}; // Ensure BOUNDS is accessible or use a local const
-        activeCheckpointIndex = -1; // No checkpoints available
+        resetPos = {0.0f, 0.0f, -BOUNDS + 2.0f};
+        activeCheckpointIndex = -1; 
         std::cout << "Resetting to Fallback Start" << std::endl;
     }
 
@@ -150,7 +141,7 @@ void resetMarble() {
     marbleZ = resetPos.z;
     float resetGroundH, dummyNX, dummyNY, dummyNZ;
     getArenaHeightAndNormal(marbleX, marbleZ, resetGroundH, dummyNX, dummyNY, dummyNZ);
-    marbleY = resetGroundH + 0.5f; // Assuming marble radius 0.5f
+    marbleY = resetGroundH + 0.5f;
 
     marbleVX = 0.0f;
     marbleVZ = 0.0f;
@@ -158,14 +149,63 @@ void resetMarble() {
 
 }
 
-void setupCheckpoints() {
-    // Ensure BOUNDS is accessible if used directly or pass it if it's not global from globals.h
+Vec3 finishPosition;
+bool finishSet = false;
+bool finishReached = false;
 
-    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~buat checkpoint di sini~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    // addCheckpoint(0.0f, -8.0f, 0.0f);    // First checkpoint (spawn) - 0.0 minutes bonus
-    // addCheckpoint(0.0f, -4.0f, 0.5f);    // Second checkpoint - 1 minute bonus  
-    // addCheckpoint(-6.0f, -4.5f, 0.5f);   // Third checkpoint - 1.5 minutes bonus
-    addCheckpoint(-10.0f, -2.0f, 0.5f);  // Fourth checkpoint - 2 minutes bonus
+void addFinish(float x, float z) {
+    finishPosition = {x, 0.0f, z};
+    finishSet = true;
+    finishReached = false;
+}
+
+void checkFinishCollision() {
+    if (!finishSet || finishReached) return;
+    float finishGroundH, dummyNX, dummyNY, dummyNZ;
+    getArenaHeightAndNormal(finishPosition.x, finishPosition.z, finishGroundH, dummyNX, dummyNY, dummyNZ);
+    float finishY = finishGroundH + 0.5f;
+    float dx = marbleX - finishPosition.x;
+    float dz = marbleZ - finishPosition.z;
+    float dy = marbleY - finishY;
+    float dist3D = sqrt(dx * dx + dy * dy + dz * dz);
+    float collisionRadius = marbleRadius + (marbleRadius * 0.5f);
+    if (dist3D < collisionRadius) {
+        finishReached = true;
+        std::cout << "FINISH! Congratulations, you have completed the level!" << std::endl;
+    }
+}
+
+void drawFinish() {
+    if (!finishSet) return;
+    float finishGroundH, dummyNX, dummyNY, dummyNZ;
+    getArenaHeightAndNormal(finishPosition.x, finishPosition.z, finishGroundH, dummyNX, dummyNY, dummyNZ);
+    float visualFinishRadius = marbleRadius * 0.7f;
+    float finishEffectiveY = finishGroundH + visualFinishRadius;
+    glPushAttrib(GL_ENABLE_BIT | GL_CURRENT_BIT | GL_LIGHTING_BIT);
+    glEnable(GL_LIGHTING);
+    glPushMatrix();
+    glTranslatef(finishPosition.x, finishEffectiveY, finishPosition.z);
+    // Material: Biru terang berkilau
+    GLfloat f_ambient[4] = {0.0f, 0.2f, 0.6f, 0.9f};
+    GLfloat f_diffuse[4] = {0.2f, 0.6f, 1.0f, 0.9f};
+    GLfloat f_specular[4] = {0.8f, 0.8f, 1.0f, 0.9f};
+    GLfloat f_shininess = 80.0f;
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glColor4f(0.2f, 0.6f, 1.0f, 0.9f);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, f_ambient);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, f_diffuse);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, f_specular);
+    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, f_shininess);
+    glutSolidSphere(visualFinishRadius, 20, 20);
+    glPopMatrix();
+    glPopAttrib();
+}
+
+void setupCheckpoints() {
+
+    addCheckpoint(-10.0f, -2.0f, 0.5f); 
     addCheckpoint(9.98f, -7.84f, 0.5f);
     addCheckpoint(9.95f, 22.66f, 0.5f);
+    addFinish(28.66f, 37.87f); 
 }

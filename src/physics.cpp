@@ -20,6 +20,7 @@ void updatePhysics() {
     }
 
     checkCheckpointCollision();
+    checkFinishCollision(); // Tambahkan ini agar deteksi finish berjalan
 
     // --- Vertical Physics ---
     marbleVY -= gravity * deltaTime;
