@@ -14,4 +14,5 @@ float getArenaHeightAt(float x, float y, float z);
 void getArenaHeightAndNormalAt(float x, float y, float z, float& outHeight, float& outNormalX, float& outNormalY, float& outNormalZ);
 
 void drawTree(float x, float y, float z, float trunkHeight, float trunkRadius, float foliageRadius);
+void drawRock(float centerX, float centerY, float centerZ, float scale);
 #endif // ARENA_H

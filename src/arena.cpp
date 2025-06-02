@@ -44,11 +44,16 @@ struct ArenaTree {
     float trunkHeight, trunkRadius;
     float foliageRadius;
 };
+struct ArenaRock {
+    float x, y, z;
+    float scale;
+};
 
 std::vector<ArenaCube> cubes;
 std::vector<ArenaRamp> ramps;
 std::vector<ArenaBush> bushes;
 std::vector<ArenaTree> trees;
+std::vector<ArenaRock> rocks;
 
 void CreateCube(float x, float y, float z, float sizeX, float sizeY, float sizeZ) {
     cubes.push_back({x, y, z, sizeX, sizeY, sizeZ});
@@ -114,8 +119,10 @@ void CreateBush(float x, float y, float z, float radius) {
 
 void CreateTree(float x, float y, float z, float trunkHeight, float trunkRadius, float foliageRadius) {
     trees.push_back({x, y, z, trunkHeight, trunkRadius, foliageRadius});
-    // Note: Trees don't need collision since they are decorative only
-    // No need to update arenaHeights array
+}
+
+void CreateRock(float x, float y, float z, float scale) {
+    rocks.push_back({x, y, z, scale});
 }
 
 // --- Arena Building Helper Functions ---
@@ -460,7 +467,16 @@ void setupArenaGeometry() {
     CreateTree(14.71f, 0.30f, -21.45f, 5.0f, 0.2f, 1.5f); // Another tree
     CreateTree(14.71f, 0.30f, -27.45f, 5.0f, 0.2f, 1.5f); // Another tree
 
-    // Developer bisa tambah sendiri: CreateCube(...), CreateRamp(...), CreateBush(...)
+    // Add some rocks to the scene for decoration
+    CreateRock(18.0f, 0.0f, 12.0f, 1.2f);    // Large rock near trees
+    CreateRock(-8.0f, 0.0f, -20.0f, 0.8f);   // Medium rock 
+    CreateRock(25.0f, 0.0f, -15.0f, 1.5f);   // Large rock
+    CreateRock(-12.0f, 0.0f, 15.0f, 0.6f);   // Small rock
+    CreateRock(10.0f, 0.0f, 25.0f, 1.0f);    // Medium rock near end area
+    CreateRock(-25.0f, 0.0f, 5.0f, 1.3f);    // Large rock on the side
+    CreateRock(5.0f, 0.0f, -25.0f, 0.9f);    // Medium rock
+
+    // Developer bisa tambah sendiri: CreateCube(...), CreateRamp(...), CreateBush(...), CreateRock(...)
 }
 
 
@@ -875,6 +891,7 @@ void PrintMarblePositionForPlacement(float x, float y, float z) {
     printf("CreateRamp(%.2ff, %.2ff, %.2ff, sizeX, sizeY, sizeZ, 'axis');\n", x, y, z);
     printf("CreateBush(%.2ff, %.2ff, %.2ff, radius);\n", x, y, z);
     printf("CreateTree(%.2ff, %.2ff, %.2ff, trunkHeight, trunkRadius, foliageRadius);\n", x, y, z);
+    printf("CreateRock(%.2ff, %.2ff, %.2ff, scale);\n", x, y, z);
     printf("addCheckpoint(%.2ff, %.2ff, bonusMinutes);\n", x, z);
     printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
 }
@@ -938,30 +955,120 @@ void drawGround() {
     for (const auto& t : trees) {
         drawTree(t.x, t.y, t.z, t.trunkHeight, t.trunkRadius, t.foliageRadius);
     }
-
-
+    
+    // Draw rocks (decorative only)
+    for (const auto& rock : rocks) {
+        drawRock(rock.x, rock.y, rock.z, rock.scale);
+    }
 }
 
 
-
-
 void drawTree(float x, float y, float z, float trunkHeight, float trunkRadius, float foliageRadius) {
-    // Draw trunk
-    glColor3f(0.5f, 0.3f, 0.0f); // Brown
+    // Set material properties for trunk (bark-like)
+    GLfloat trunk_ambient[] = {0.2f, 0.1f, 0.05f, 1.0f};
+    GLfloat trunk_diffuse[] = {0.5f, 0.3f, 0.1f, 1.0f};
+    GLfloat trunk_specular[] = {0.1f, 0.05f, 0.02f, 1.0f};
+    GLfloat trunk_shininess = 8.0f;
+    
+    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, trunk_ambient);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, trunk_diffuse);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, trunk_specular);
+    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, trunk_shininess);
+
+    // Draw main trunk with slight taper
+    glColor3f(0.5f, 0.3f, 0.1f); // Rich brown
     glPushMatrix();
     glTranslatef(x, y, z);
-    glRotatef(-90, 1, 0, 0); // Orient the cylinder along the Y axis
+    glRotatef(-90, 1, 0, 0);
     GLUquadric *quad = gluNewQuadric();
-    gluCylinder(quad, trunkRadius, trunkRadius, trunkHeight, 10, 10);
+    gluCylinder(quad, trunkRadius, trunkRadius * 0.8f, trunkHeight * 0.7f, 12, 8);
     gluDeleteQuadric(quad);
     glPopMatrix();
 
-    // Draw foliage
-    glColor3f(0.0f, 0.7f, 0.0f); // Green
+    // Draw upper trunk section (thinner)
     glPushMatrix();
-    glTranslatef(x, y + trunkHeight, z);
-    glutSolidSphere(foliageRadius, 10, 10);
+    glTranslatef(x, y + trunkHeight * 0.7f, z);
+    glRotatef(-90, 1, 0, 0);
+    quad = gluNewQuadric();
+    gluCylinder(quad, trunkRadius * 0.8f, trunkRadius * 0.6f, trunkHeight * 0.3f, 12, 6);
+    gluDeleteQuadric(quad);
     glPopMatrix();
+
+    // Draw some branches
+    float branchHeight = y + trunkHeight * 0.75f;
+    float branchLength = trunkRadius * 2.5f;
+    float branchRadius = trunkRadius * 0.3f;
+    
+    // Branch angles for more natural look
+    float branchAngles[] = {30.0f, 120.0f, 210.0f, 300.0f};
+    float branchTilts[] = {15.0f, -10.0f, 20.0f, -15.0f};
+    
+    glColor3f(0.4f, 0.25f, 0.1f); // Slightly darker brown for branches
+    
+    for (int i = 0; i < 4; i++) {
+        glPushMatrix();
+        glTranslatef(x, branchHeight + (i * trunkHeight * 0.05f), z);
+        glRotatef(branchAngles[i], 0, 1, 0); // Rotate around Y axis
+        glRotatef(branchTilts[i], 0, 0, 1);  // Tilt the branch
+        glRotatef(-90, 1, 0, 0);
+        
+        quad = gluNewQuadric();
+        gluCylinder(quad, branchRadius, branchRadius * 0.5f, branchLength, 8, 4);
+        gluDeleteQuadric(quad);
+        glPopMatrix();
+    }
+
+    // Set material properties for foliage (leafy)
+    GLfloat foliage_ambient[] = {0.05f, 0.2f, 0.05f, 1.0f};
+    GLfloat foliage_diffuse[] = {0.1f, 0.6f, 0.1f, 1.0f};
+    GLfloat foliage_specular[] = {0.02f, 0.1f, 0.02f, 1.0f};
+    GLfloat foliage_shininess = 3.0f;
+    
+    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, foliage_ambient);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, foliage_diffuse);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, foliage_specular);
+    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, foliage_shininess);
+
+    // Draw layered foliage for more realistic canopy
+    struct FoliageLayer {
+        float heightOffset, radiusScale, colorVariation;
+    };
+    
+    FoliageLayer layers[] = {
+        // Bottom layer (largest)
+        {trunkHeight * 0.6f, 1.2f, 0.8f},
+        // Middle layer
+        {trunkHeight * 0.8f, 1.0f, 0.9f},
+        // Top layer (smallest)
+        {trunkHeight *  1.0f, 0.7f, 1.0f},
+        // Peak
+        {trunkHeight * 1.15f, 0.4f, 1.1f}
+    };
+    
+    for (int i = 0; i < 4; i++) {
+        glPushMatrix();
+        glTranslatef(x, y + layers[i].heightOffset, z);
+        
+        // Vary green color for each layer
+        float greenVar = layers[i].colorVariation;
+        glColor3f(0.1f * greenVar, 0.6f * greenVar, 0.1f * greenVar);
+        
+        glutSolidSphere(foliageRadius * layers[i].radiusScale, 14, 14);
+        glPopMatrix();
+    }
+
+    // Add some smaller foliage clusters on branches for detail
+    glColor3f(0.15f, 0.5f, 0.15f); // Slightly different green
+    for (int i = 0; i < 4; i++) {
+        float branchEndX = x + cos(branchAngles[i] * M_PI / 180.0f) * branchLength * 0.7f;
+        float branchEndZ = z + sin(branchAngles[i] * M_PI / 180.0f) * branchLength * 0.7f;
+        float branchEndY = branchHeight + (i * trunkHeight * 0.05f) + branchLength * sin(branchTilts[i] * M_PI / 180.0f) * 0.5f;
+        
+        glPushMatrix();
+        glTranslatef(branchEndX, branchEndY, branchEndZ);
+        glutSolidSphere(foliageRadius * 0.3f, 10, 10);
+        glPopMatrix();
+    }
 }
 
 
@@ -1016,4 +1123,173 @@ void drawBush(float centerX, float centerY, float centerZ, float radius) {
             glutSolidSphere(radius * spheres[i].scale, 12, 12);
         glPopMatrix();
     }
+}
+
+
+void drawRock(float centerX, float centerY, float centerZ, float scale) {
+    // Set material properties for rock (stone-like)
+    GLfloat rock_ambient[] = {0.3f, 0.3f, 0.3f, 1.0f};   // Dark grey ambient
+    GLfloat rock_diffuse[] = {0.6f, 0.6f, 0.6f, 1.0f};   // Medium grey diffuse
+    GLfloat rock_specular[] = {0.1f, 0.1f, 0.1f, 1.0f};  // Very low specular (rocks aren't shiny)
+    GLfloat rock_shininess = 2.0f;                        // Very low shininess
+    
+    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, rock_ambient);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, rock_diffuse);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, rock_specular);
+    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, rock_shininess);
+
+    glPushMatrix();
+    glTranslatef(centerX, centerY, centerZ);
+    glScalef(scale, scale, scale);
+    
+    // Define vertices for an irregular rock shape
+    // Using multiple interconnected triangular faces to create organic shape
+    float vertices[][3] = {
+        // Bottom vertices (touching ground)
+        {-1.2f, 0.0f, -0.8f},    // 0
+        {0.0f, 0.0f, -1.3f},     // 1  
+        {1.1f, 0.0f, -0.6f},     // 2
+        {1.3f, 0.0f, 0.7f},      // 3
+        {0.2f, 0.0f, 1.4f},      // 4
+        {-0.9f, 0.0f, 1.0f},     // 5
+        {-1.5f, 0.0f, 0.2f},     // 6
+        
+        // Middle layer vertices
+        {-0.8f, 0.6f, -0.9f},    // 7
+        {0.3f, 0.7f, -1.1f},     // 8
+        {1.0f, 0.5f, -0.3f},     // 9
+        {1.1f, 0.8f, 0.8f},      // 10
+        {-0.1f, 0.6f, 1.2f},     // 11
+        {-1.0f, 0.7f, 0.5f},     // 12
+        {-1.2f, 0.5f, -0.1f},    // 13
+        
+        // Upper layer vertices
+        {-0.3f, 1.1f, -0.5f},    // 14
+        {0.4f, 1.2f, -0.2f},     // 15
+        {0.6f, 1.0f, 0.4f},      // 16
+        {-0.2f, 1.3f, 0.6f},     // 17
+        {-0.6f, 1.1f, 0.1f},     // 18
+        
+        // Peak vertices
+        {0.0f, 1.6f, 0.1f},      // 19
+        {-0.1f, 1.7f, -0.1f},    // 20
+    };
+    
+    // Define faces using vertex indices (counter-clockwise for outward normals)
+    int faces[][3] = {
+        // Bottom ring faces
+        {0, 1, 7}, {1, 8, 7}, {1, 2, 8}, {2, 9, 8},
+        {2, 3, 9}, {3, 10, 9}, {3, 4, 10}, {4, 11, 10},
+        {4, 5, 11}, {5, 12, 11}, {5, 6, 12}, {6, 13, 12},
+        {6, 0, 13}, {0, 7, 13},
+        
+        // Middle ring faces
+        {7, 8, 14}, {8, 15, 14}, {8, 9, 15}, {9, 16, 15},
+        {9, 10, 16}, {10, 17, 16}, {10, 11, 17}, {11, 18, 17},
+        {11, 12, 18}, {12, 19, 18}, {12, 13, 19}, {13, 14, 19},
+        {13, 7, 14},
+        
+        // Upper ring faces
+        {14, 15, 20}, {15, 16, 20}, {16, 17, 20}, {17, 18, 20},
+        {18, 19, 20}, {19, 14, 20},
+        
+        // Additional irregular faces for more organic shape
+        {7, 12, 18}, {7, 18, 14}, {8, 9, 16}, {8, 16, 15},
+        {10, 11, 17}, {12, 13, 19}, {14, 18, 19},
+        
+        // Some inverted faces for surface irregularities
+        {1, 0, 6}, {1, 6, 4}, {2, 1, 4}, {2, 4, 3},
+        {15, 16, 19}, {15, 19, 18}, {15, 18, 14},
+    };
+    
+    int numFaces = sizeof(faces) / sizeof(faces[0]);
+    
+    // Draw the rock using triangular faces
+    glBegin(GL_TRIANGLES);
+    
+    for (int i = 0; i < numFaces; i++) {
+        // Get the three vertices of the triangle
+        float* v1 = vertices[faces[i][0]];
+        float* v2 = vertices[faces[i][1]];
+        float* v3 = vertices[faces[i][2]];
+        
+        // Calculate normal vector (cross product)
+        float edge1[3] = {v2[0] - v1[0], v2[1] - v1[1], v2[2] - v1[2]};
+        float edge2[3] = {v3[0] - v1[0], v3[1] - v1[1], v3[2] - v1[2]};
+        
+        float normal[3] = {
+            edge1[1] * edge2[2] - edge1[2] * edge2[1],
+            edge1[2] * edge2[0] - edge1[0] * edge2[2],
+            edge1[0] * edge2[1] - edge1[1] * edge2[0]
+        };
+        
+        // Normalize the normal vector
+        float length = sqrt(normal[0]*normal[0] + normal[1]*normal[1] + normal[2]*normal[2]);
+        if (length > 0.001f) {
+            normal[0] /= length;
+            normal[1] /= length;
+            normal[2] /= length;
+        }
+        
+        // Add slight color variation for each face to simulate rock texture
+        float colorVar = 0.8f + (i % 5) * 0.05f;
+        glColor3f(0.5f * colorVar, 0.5f * colorVar, 0.5f * colorVar);
+        
+        // Draw the triangle with calculated normal
+        glNormal3f(normal[0], normal[1], normal[2]);
+        glVertex3f(v1[0], v1[1], v1[2]);
+        glVertex3f(v2[0], v2[1], v2[2]);
+        glVertex3f(v3[0], v3[1], v3[2]);
+    }
+    
+    glEnd();
+    
+    // Add some surface detail bumps for more realistic texture
+    glColor3f(0.4f, 0.4f, 0.4f); // Darker grey for details
+    
+    // Small surface bumps
+    struct BumpDetail {
+        float x, y, z, size;
+    };
+    
+    BumpDetail bumps[] = {
+        {-0.3f, 0.8f, -0.2f, 0.1f},
+        {0.4f, 0.6f, 0.3f, 0.08f},
+        {-0.6f, 0.4f, 0.5f, 0.12f},
+        {0.7f, 0.9f, -0.1f, 0.07f},
+        {-0.1f, 1.1f, 0.4f, 0.09f},
+        {0.2f, 0.3f, -0.7f, 0.11f}
+    };
+    
+    for (int i = 0; i < 6; i++) {
+        glPushMatrix();
+        glTranslatef(bumps[i].x, bumps[i].y, bumps[i].z);
+        
+        // Create small irregular bump using a few triangles
+        glBegin(GL_TRIANGLES);
+        float size = bumps[i].size;
+        
+        // Simple pyramid-like bump
+        glNormal3f(0.0f, 1.0f, 0.0f);
+        glVertex3f(-size, 0.0f, -size);
+        glVertex3f(size, 0.0f, -size);
+        glVertex3f(0.0f, size * 0.8f, 0.0f);
+        
+        glVertex3f(size, 0.0f, -size);
+        glVertex3f(size, 0.0f, size);
+        glVertex3f(0.0f, size * 0.8f, 0.0f);
+        
+        glVertex3f(size, 0.0f, size);
+        glVertex3f(-size, 0.0f, size);
+        glVertex3f(0.0f, size * 0.8f, 0.0f);
+        
+        glVertex3f(-size, 0.0f, size);
+        glVertex3f(-size, 0.0f, -size);
+        glVertex3f(0.0f, size * 0.8f, 0.0f);
+        
+        glEnd();
+        glPopMatrix();
+    }
+    
+    glPopMatrix();
 }
