@@ -68,9 +68,6 @@ void checkCheckpointCollision() {
     }
 
 void drawCheckpoints() {
-    // Aktifkan blending untuk checkpoint yang sudah diambil (transparan)
-    // Untuk checkpoint yang belum diambil, kita akan menonaktifkan blend sementara
-    // agar warna kuningnya solid.
     glPushAttrib(GL_ENABLE_BIT | GL_CURRENT_BIT | GL_LIGHTING_BIT); // Simpan state GL
     glEnable(GL_LIGHTING); // Pastikan lighting aktif untuk checkpoint
 

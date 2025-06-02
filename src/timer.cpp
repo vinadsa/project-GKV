@@ -48,8 +48,6 @@ void updateTimer() {
 
 // Definition for recordCheckpointTime
 void recordCheckpointTime() {
-    // Records the current elapsed time when a checkpoint is hit
-    // We use elapsedSeconds.count() as it holds the duration up to the last updateTimer call or stopTimer call
     checkpointTimes.push_back(elapsedSeconds.count());
 }
 
@@ -109,9 +107,7 @@ void displayTimer(int screenWidth, int screenHeight) {
     // Set text color (e.g., white)
     glColor3f(1.0f, 1.0f, 1.0f);
 
-    // Position and display the main timer
-    // Adjust x and y for desired placement. (0,0) is bottom-left.
-    // For top-left, you might use (10, screenHeight - 20) or similar.
+    // Set raster position for text rendering
     int mainTimerYPosition = screenHeight - 30;
     glRasterPos2i(10, mainTimerYPosition); // Adjust Y for font size and margin
 

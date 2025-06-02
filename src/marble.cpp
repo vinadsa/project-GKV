@@ -10,8 +10,6 @@ int score = 0; // Initialize score variable
 // Define checkpoint data storage
 std::vector<CheckpointData> checkpointData; // Store checkpoint position and bonus time
 
-// This file contains the marble logic, including its position, velocity, and rendering.
-
 // Define global variables from globals.h that are primarily managed or used by marble logic
 float marbleX = 0.0f, marbleZ = 0.0f;
 float marbleVX = 0.0f, marbleVZ = 0.0f;
@@ -60,8 +58,6 @@ void drawMarble() {
     if (sphereQuadric != nullptr) { // Check if sphereQuadric is initialized
         gluSphere(sphereQuadric, 0.5, 32, 32); // Draw sphere using quadric (which should have texture coords enabled)
     } else {
-        // Fallback if quadric is not available (though it should be)
-        // This fallback won't be textured correctly without manual tex coord generation
         glColor3f(0.9f, 0.7f, 0.5f); // Fallback color
         glutSolidSphere(0.5, 32, 32); 
     }
@@ -74,7 +70,7 @@ void drawMarble() {
     glPopMatrix();
 }
 
-// This function sets the very initial state before any checkpoints are considered.
+
 // The main reset logic tied to checkpoints is in checkpoint.cpp
 void resetMarbleInitialState() {
     marbleX = 0.0f;

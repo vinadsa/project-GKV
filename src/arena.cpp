@@ -113,8 +113,6 @@ void CreateRamp(float x, float y, float z, float sizeX, float sizeY, float sizeZ
 
 void CreateBush(float x, float y, float z, float radius) {
     bushes.push_back({x, y, z, radius});
-    // Note: Bushes don't need collision since they are decorative only
-    // No need to update arenaHeights array
 }
 
 void CreateTree(float x, float y, float z, float trunkHeight, float trunkRadius, float foliageRadius) {
@@ -126,9 +124,6 @@ void CreateRock(float x, float y, float z, float scale) {
 }
 
 // --- Arena Building Helper Functions ---
-// Fungsi addFlatArea dan addRampArea tidak lagi memodifikasi arenaHeights secara langsung
-// Kubus dan Ramp akan digambar secara eksplisit
-
 void drawCube(float centerX, float centerY, float centerZ, float sizeX, float sizeY, float sizeZ) {
     // Draw shadow for the cube (planar shadow, similar to marble)
     if (enableShadows) {
@@ -238,9 +233,7 @@ void drawRamp(float centerX, float centerY, float centerZ, float sizeX, float si
     float hz = sizeZ / 2.0f;
 
     if (axis == 'z') { // Ramp miring sepanjang sumbu Z
-        // Vertices (koordinat lokal relatif terhadap pusat ramp yang sudah ditranslasikan)
-        // Dasar ramp berada di y = -hy, puncak ramp di y = hy.
-        // Ramp miring dari z = -hz (kaki ramp) ke z = hz (puncak ramp, bagian vertikal).
+        
         float v[6][3] = {
             {-hx, -hy, -hz}, // v0 (depan-bawah-kiri, kaki ramp)
             { hx, -hy, -hz}, // v1 (depan-bawah-kanan, kaki ramp)
@@ -250,11 +243,7 @@ void drawRamp(float centerX, float centerY, float centerZ, float sizeX, float si
             { hx,  hy,  hz}  // v5 (belakang-atas-kanan, puncak ramp)
         };
 
-        // Normal untuk permukaan miring (v0, v1, v5, v4)
-        // Vektor dari v0 ke v1: (2*hx, 0, 0)
-        // Vektor dari v0 ke v4: (0, 2*hy, 2*hz) -> (0, sizeY, sizeZ)
-        // Cross product: (0 * sizeZ - 0 * sizeY, 0 * 0 - 2*hx * sizeZ, 2*hx * sizeY - 0*0)
-        // = (0, -sizeX * sizeZ, sizeX * sizeY)
+        
         float norm_slope_x = 0;
         float norm_slope_y = -sizeX * sizeZ; // Ini akan menjadi komponen Y dari normal jika ramp horizontal
                                           // Untuk ramp miring, ini adalah komponen yang tegak lurus ke XZ plane
@@ -265,27 +254,7 @@ void drawRamp(float centerX, float centerY, float centerZ, float sizeX, float si
             norm_slope_y /= len_slope;
             norm_slope_z /= len_slope;
         }
-        // Pastikan normal mengarah "keluar" dari permukaan atas.
-        // Jika sizeY positif, kita ingin komponen Y dari normal (setelah transformasi) positif.
-        // Untuk ramp Z, normal permukaan miring adalah (0, cos(angle), sin(angle)) jika angle adalah sudut kemiringan dari XZ
-        // atau lebih tepatnya, normalnya adalah (0, sizeZ, -sizeY) dinormalisasi, jika ramp naik ke +Y saat Z meningkat.
-        // Jika ramp naik dari -hy ke +hy, dan dari -hz ke +hz (bagian atas di +hz)
-        // Vektor pada permukaan: (sizeX, 0, 0) dan (0, sizeY, sizeZ)
-        // Normal: (0, -sizeX*sizeZ, sizeX*sizeY)
-        // Kita ingin normal yang Y-nya positif jika dilihat dari atas.
-        // Vektor kemiringan: (0, sizeY, sizeZ)
-        // Vektor lebar: (sizeX, 0, 0)
-        // Normal permukaan miring: cross((sizeX,0,0), (0,sizeY,sizeZ)) = (0, -sizeX*sizeZ, sizeX*sizeY)
-        // Ini adalah normal yang benar jika sisi depan (v0,v1) lebih rendah dari sisi belakang (v4,v5)
-        // Untuk memastikan normal mengarah ke atas relatif terhadap kemiringan:
-        // N = (0, sizeZ, -sizeY) (jika ramp naik dari -Z ke +Z)
-        // Jika ramp naik dari Z=-hz ke Z=+hz, maka kaki di -hz, puncak di +hz.
-        // Permukaan miring: v0,v1,v5,v4
-        // v0=(-hx,-hy,-hz), v1=(hx,-hy,-hz), v4=(-hx,hy,hz), v5=(hx,hy,hz)
-        // E1 = v1-v0 = (2hx, 0, 0)
-        // E2 = v4-v0 = (0, 2hy, 2hz)
-        // N = E1 x E2 = (0, -2hx*2hz, 2hx*2hy) = (0, -sizeX*sizeZ, sizeX*sizeY)
-        // Normal ini memiliki komponen Y negatif jika sizeX, sizeY, sizeZ positif. Kita balik.
+      
         norm_slope_x = 0;
         norm_slope_y = sizeX * sizeZ;
         norm_slope_z = -sizeX * sizeY;
@@ -340,9 +309,7 @@ void drawRamp(float centerX, float centerY, float centerZ, float sizeX, float si
         glEnd();
 
     } else if (axis == 'x') { // Ramp miring sepanjang sumbu X
-        // Vertices (koordinat lokal relatif terhadap pusat ramp)
-        // Dasar ramp di y = -hy, puncak ramp di y = hy.
-        // Ramp miring dari x = -hx (kaki ramp) ke x = hx (puncak ramp, bagian vertikal).
+       
         float v[6][3] = {
             {-hx, -hy, -hz}, // v0 (kiri-bawah-depan, kaki ramp)
             {-hx, -hy,  hz}, // v1 (kiri-bawah-belakang, kaki ramp)
@@ -352,11 +319,7 @@ void drawRamp(float centerX, float centerY, float centerZ, float sizeX, float si
             { hx,  hy,  hz}  // v5 (kanan-atas-belakang, puncak ramp)
         };
 
-        // Normal untuk permukaan miring (v0, v1, v5, v4)
-        // E1 = v1-v0 = (0, 0, 2hz)
-        // E2 = v4-v0 = (2hx, 2hy, 0)
-        // N = E1 x E2 = (-2hz*2hy, 2hz*2hx, 0) = (-sizeZ*sizeY, sizeZ*sizeX, 0)
-        // Kita balik agar Y positif.
+        
         float norm_slope_x = sizeZ * sizeY;
         float norm_slope_y = -sizeZ * sizeX;
         float norm_slope_z = 0;
@@ -420,9 +383,6 @@ void drawRamp(float centerX, float centerY, float centerZ, float sizeX, float si
 
 void setupArenaGeometry() {
     cubes.clear(); ramps.clear(); bushes.clear(); trees.clear();
-    // Contoh penggunaan:
-    // CreateCube(0.0f, 2.0f, 5.0f, 2.0f, 2.0f, 2.0f); // Cube di tengah
-    // CreateRamp(0.0f, 1.0f, 2.5f, 2.0f, 2.0f, 3.0f, 'z'); // Ramp ke cube
     CreateRamp(1.0f, 1.0f, -3.0f, 2.0f, 2.0f, 1.0f, 'x'); // Ramp ke arah X
     CreateCube(7.0f, 2.0f, -3.0f, 10.0f, 1.0f, 1.0f); // Cube di kanan
     CreateCube(10.0f, 2.0f, -3.0f, 1.0f, 1.0f, 10.0f); // Cube di kanan
