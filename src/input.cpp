@@ -1,14 +1,13 @@
 #include "input.h"
-#include "globals.h"  // Sekarang menyertakan mouseSensitivity
-#include "utils.h"    // For clamp
-#include "checkpoint.h" // For resetMarble
+#include "globals.h" 
+#include "utils.h"   
+#include "checkpoint.h" 
 #include <GL/glut.h>
-#include <cstdlib> // For exit()
+#include <cstdlib> 
 
-// Variabel global dari globals.h yang terutama terkait input
 bool isDragging = false;
 int lastMouseX = 0, lastMouseY = 0;
-bool keyStates[256]; // Definisi
+bool keyStates[256]; 
 
 
 void initKeyStates() {
@@ -39,19 +38,17 @@ void normalKeysDown(unsigned char key, int x, int y) {
     if (key < 256) {
         keyStates[key] = true;
     }
-    if (key == 27) { // ESC
+    if (key == 27) {
         exit(0);
     }
     if (key == 'r' || key == 'R') {
-        resetMarble(); // Calls the function from checkpoint.cpp
+        resetMarble();
     }
-    // --- Print marble position for placement helper ---
     if (key == 'o' || key == 'O') {
         extern float marbleX, marbleY, marbleZ;
         extern void PrintMarblePositionForPlacement(float x, float y, float z);
         PrintMarblePositionForPlacement(marbleX, marbleY, marbleZ);
     }
-    // Toggle shadow on/off
     if (key == 's' || key == 'S') {
         enableShadows = !enableShadows;
         glutPostRedisplay();
@@ -73,11 +70,11 @@ void mouseButton(int button, int state, int x, int y) {
         } else {
             isDragging = false;
         }
-    } else if (button == 3) { // Scroll up
+    } else if (button == 3) {
         cameraDistance -= 0.5f;
         cameraDistance = clamp(cameraDistance, 2.0f, 30.0f);
         glutPostRedisplay();
-    } else if (button == 4) { // Scroll down
+    } else if (button == 4) {
         cameraDistance += 0.5f;
         cameraDistance = clamp(cameraDistance, 2.0f, 30.0f);
         glutPostRedisplay();
