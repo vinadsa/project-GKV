@@ -24,7 +24,7 @@ void displayTimer(int screenWidth, int screenHeight);
 char* getElapsedTimeString();
 
 void recordCheckpointTime();
-const std::vector<double>& getCheckpointTimes(); // Returns a const reference to the vector of checkpoint times
-std::vector<std::string> getFormattedCheckpointTimes(); // Returns formatted checkpoint times
+const std::vector<double>& getCheckpointTimes(); 
+std::vector<std::string> getFormattedCheckpointTimes(); 
 
 #endif // TIMER_H

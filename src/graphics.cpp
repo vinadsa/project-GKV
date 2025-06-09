@@ -16,24 +16,21 @@
 
 
 
-// Global definitions
-GLuint marbleTextureID = 0; // ADDED: Initialize to 0 (no texture)
+GLuint marbleTextureID = 0;
 GLUquadric* sphereQuadric = nullptr;
-bool enableShadows = true; // Toggle global untuk shadow
+bool enableShadows = true; 
 
 
 void drawScore() {
-    // Calculate total possible score based on collected checkpoints
-    // Count uncollected checkpoints (excluding first checkpoint which is spawn point)
     int totalPossibleScore = 0;
-    if (checkpoints.size() > 1) { // If there's more than just the spawn checkpoint
-        for (int i = 1; i < checkpoints.size(); ++i) { // Start from index 1 to exclude spawn
-            totalPossibleScore += 100; // Each checkpoint is worth 100 points
+    if (checkpoints.size() > 1) { 
+        for (int i = 1; i < checkpoints.size(); ++i) { 
+            totalPossibleScore += 100; 
         }
     }
     
     std::string scoreStr = "Score: " + std::to_string(score) + "/" + std::to_string(totalPossibleScore);
-    glColor3f(1.0f, 1.0f, 0.0f); // Kuning
+    glColor3f(1.0f, 1.0f, 0.0f);
     void* font = GLUT_BITMAP_HELVETICA_18;
 
     // Setup ortho projection supaya text selalu di posisi layar
@@ -63,12 +60,9 @@ void drawScore() {
     glMatrixMode(GL_MODELVIEW);
 }
 
-// Dynamic lighting function that updates light positions based on marble position
 void updateDynamicLighting() {
-    // Update rim light to follow marble for better highlighting
     GLfloat light2_pos[] = {marbleX, marbleY + 15.0f, marbleZ - 20.0f, 1.0f};
     glLightfv(GL_LIGHT2, GL_POSITION, light2_pos);
-      // Optional: Add subtle movement to fill light for more dynamic shadows
     static float lightTime = 0.0f;
     lightTime += 0.01f;
     GLfloat light1_pos[] = {
@@ -78,11 +72,9 @@ void updateDynamicLighting() {
         1.0f
     };
     glLightfv(GL_LIGHT1, GL_POSITION, light1_pos);
-      // Add subtle intensity variation to make lighting more dynamic
     static float intensityTime = 0.0f;
     intensityTime += 0.005f;
-      // Vary the main light intensity slightly for a more natural feel (reduced variation)
-    float intensityVariation = 0.95f + 0.05f * sinf(intensityTime); // Much smaller variation
+    float intensityVariation = 0.95f + 0.05f * sinf(intensityTime);
     GLfloat light0_diffuse[] = {
         0.7f * intensityVariation, 
         0.65f * intensityVariation, 
@@ -92,7 +84,6 @@ void updateDynamicLighting() {
     glLightfv(GL_LIGHT0, GL_DIFFUSE, light0_diffuse);
 }
 
-// Replace glShadowProjection with robust version for a plane and point light
 void glShadowProjection(const float* light, const float* plane) {
     float dot = plane[0]*light[0] + plane[1]*light[1] + plane[2]*light[2] + plane[3]*light[3];
     float mat[16];
@@ -123,42 +114,33 @@ void display() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glLoadIdentity();
 
-    // Camera target (look-at point)
     float targetX = marbleX;
-    // Use marbleY directly for the target's Y position, so the camera follows the marble in the air.
-    float targetY = marbleY + cameraTargetYOffset; // MODIFIED LINE
+    float targetY = marbleY + cameraTargetYOffset;
     float targetZ = marbleZ;
 
-    // Calculate camera's eye position (eyeX, eyeY, eyeZ)
     float camAngleXRad = degToRad(cameraAngleX);
     float camAngleYRad = degToRad(cameraAngleY);
 
-    // Corrected camera position calculation based on spherical coordinates
-    // Assuming cameraDistance is the distance from the target point to the camera.
-    // The camera orbits around the target point.
     float eyeX = targetX + cameraDistance * cos(camAngleYRad) * sin(camAngleXRad);
     float eyeY = targetY + cameraDistance * sin(camAngleYRad);
-    float eyeZ = targetZ + cameraDistance * cos(camAngleYRad) * cos(camAngleXRad);    // Ensure camera doesn't go below a certain height relative to the target or absolute minimum
-    // This can prevent clipping into the marble or ground if cameraAngleY is too steep.
-    if (eyeY < targetY + 0.2f) eyeY = targetY + 0.2f; // Keep camera slightly above target Y
-    if (eyeY < 0.1f) eyeY = 0.1f; // Absolute minimum camera heightY < 0.1f) eyeY = 0.1f; // Absolute minimum camera height
+    float eyeZ = targetZ + cameraDistance * cos(camAngleYRad) * cos(camAngleXRad);
+    if (eyeY < targetY + 0.2f) eyeY = targetY + 0.2f;
+    if (eyeY < 0.1f) eyeY = 0.1f; 
     gluLookAt(eyeX, eyeY, eyeZ,
               targetX, targetY, targetZ,
-              0.0, 1.0, 0.0); // Up vector
+              0.0, 1.0, 0.0); 
 
-    // Update dynamic lighting based on marble position
     updateDynamicLighting();
 
     drawGround();
 
 
-    // Draw Marble's Shadow (real shadow projection)
     if (enableShadows) {
         glPushMatrix();
-            GLfloat shadow_plane[4] = {0.0f, 1.0f, 0.0f, -0.01f}; // y=0.01 plane to avoid z-fighting
-            GLfloat shadow_light[4] = {10.0f, 80.0f, 10.0f, 1.0f}; // w=1 for point light
+            GLfloat shadow_plane[4] = {0.0f, 1.0f, 0.0f, -0.01f};
+            GLfloat shadow_light[4] = {10.0f, 80.0f, 10.0f, 1.0f}; 
             glShadowProjection(shadow_light, shadow_plane);
-            glTranslatef(marbleX, marbleY, marbleZ); // Use real marble position
+            glTranslatef(marbleX, marbleY, marbleZ); 
 
             glEnable(GL_POLYGON_OFFSET_FILL);
             glPolygonOffset(-2.0f, -2.0f);
@@ -180,11 +162,11 @@ void display() {
     }
 
 
-    drawMarble(); // The actual marble
+    drawMarble();
     drawCheckpoints();
-    drawFinish(); // Tambahkan ini untuk menggambar finish
-    drawScore(); // Draw the score on the screen
-    drawCongratulationsPopup(); // Tampilkan pop up jika finish tercapai
+    drawFinish(); 
+    drawScore(); 
+    drawCongratulationsPopup();
 
     int screenWidth = glutGet(GLUT_WINDOW_WIDTH);
     int screenHeight = glutGet(GLUT_WINDOW_HEIGHT);
@@ -207,7 +189,7 @@ void reshape(int w, int h) {
 
 void timer(int value) {
     updatePhysics();
-    updateTimer(); // Add this line to update the timer every frame
+    updateTimer();
     
     if (isCountdownExpired()) {
         std::cout << "Time's up! Game Over!" << std::endl;
@@ -225,57 +207,49 @@ void initGraphics() {
     glEnable(GL_COLOR_MATERIAL);
     glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
     
-    // Enable smooth shading for better lighting quality
     glShadeModel(GL_SMOOTH);
-      // Set global ambient light (reduced to preserve texture visibility)
-    GLfloat globalAmbient[] = {0.15f, 0.15f, 0.2f, 1.0f}; // Lower ambient light
+    GLfloat globalAmbient[] = {0.15f, 0.15f, 0.2f, 1.0f};
     glLightModelfv(GL_LIGHT_MODEL_AMBIENT, globalAmbient);
-    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE); // Two-sided lighting
+    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
     
-    // Main directional light (sun-like) - reduced intensity
     glEnable(GL_LIGHT0);
-    GLfloat light0_pos[] = {50.0f, 80.0f, 30.0f, 0.0f}; // Directional light (w=0)
-    GLfloat light0_ambient[] = {0.1f, 0.1f, 0.1f, 1.0f}; // Reduced ambient
-    GLfloat light0_diffuse[] = {0.7f, 0.65f, 0.6f, 1.0f}; // Reduced warm sunlight
-    GLfloat light0_specular[] = {0.8f, 0.8f, 0.8f, 1.0f}; // Reduced specular
+    GLfloat light0_pos[] = {50.0f, 80.0f, 30.0f, 0.0f};
+    GLfloat light0_ambient[] = {0.1f, 0.1f, 0.1f, 1.0f};
+    GLfloat light0_diffuse[] = {0.7f, 0.65f, 0.6f, 1.0f};
+    GLfloat light0_specular[] = {0.8f, 0.8f, 0.8f, 1.0f};
     glLightfv(GL_LIGHT0, GL_POSITION, light0_pos);
     glLightfv(GL_LIGHT0, GL_AMBIENT, light0_ambient);
     glLightfv(GL_LIGHT0, GL_DIFFUSE, light0_diffuse);
     glLightfv(GL_LIGHT0, GL_SPECULAR, light0_specular);
     
-    // Secondary fill light (point light for softer shadows) - reduced intensity
     glEnable(GL_LIGHT1);
-    GLfloat light1_pos[] = {-30.0f, 40.0f, -20.0f, 1.0f}; // Point light (w=1)
+    GLfloat light1_pos[] = {-30.0f, 40.0f, -20.0f, 1.0f};
     GLfloat light1_ambient[] = {0.05f, 0.05f, 0.08f, 1.0f};
-    GLfloat light1_diffuse[] = {0.25f, 0.3f, 0.4f, 1.0f}; // Reduced cool fill light
+    GLfloat light1_diffuse[] = {0.25f, 0.3f, 0.4f, 1.0f};
     GLfloat light1_specular[] = {0.2f, 0.2f, 0.25f, 1.0f};
     glLightfv(GL_LIGHT1, GL_POSITION, light1_pos);
     glLightfv(GL_LIGHT1, GL_AMBIENT, light1_ambient);
     glLightfv(GL_LIGHT1, GL_DIFFUSE, light1_diffuse);
     glLightfv(GL_LIGHT1, GL_SPECULAR, light1_specular);
     
-    // Set light attenuation for point light
     glLightf(GL_LIGHT1, GL_CONSTANT_ATTENUATION, 1.0f);
     glLightf(GL_LIGHT1, GL_LINEAR_ATTENUATION, 0.002f);
     glLightf(GL_LIGHT1, GL_QUADRATIC_ATTENUATION, 0.0001f);
     
-    // Rim light for marble highlighting - much more subtle
     glEnable(GL_LIGHT2);
-    GLfloat light2_pos[] = {0.0f, 20.0f, -50.0f, 1.0f}; // Behind and above
+    GLfloat light2_pos[] = {0.0f, 20.0f, -50.0f, 1.0f};
     GLfloat light2_ambient[] = {0.02f, 0.02f, 0.05f, 1.0f};
-    GLfloat light2_diffuse[] = {0.15f, 0.2f, 0.3f, 1.0f}; // Much more subtle rim light
-    GLfloat light2_specular[] = {0.4f, 0.45f, 0.5f, 1.0f}; // Reduced specular
+    GLfloat light2_diffuse[] = {0.15f, 0.2f, 0.3f, 1.0f};
+    GLfloat light2_specular[] = {0.4f, 0.45f, 0.5f, 1.0f};
     glLightfv(GL_LIGHT2, GL_POSITION, light2_pos);
     glLightfv(GL_LIGHT2, GL_AMBIENT, light2_ambient);
     glLightfv(GL_LIGHT2, GL_DIFFUSE, light2_diffuse);
     glLightfv(GL_LIGHT2, GL_SPECULAR, light2_specular);
     
-    // Enable automatic normal normalization (important for scaled objects)
     glEnable(GL_NORMALIZE);
     
-    // Add fog for atmospheric effect
     glEnable(GL_FOG);
-    GLfloat fogColor[] = {0.4f, 0.7f, 0.9f, 1.0f}; // Match sky color
+    GLfloat fogColor[] = {0.4f, 0.7f, 0.9f, 1.0f};
     glFogfv(GL_FOG_COLOR, fogColor);
     glFogf(GL_FOG_MODE, GL_LINEAR);
     glFogf(GL_FOG_START, 50.0f);    glFogf(GL_FOG_END, 200.0f);    glFogf(GL_FOG_DENSITY, 0.02f);
@@ -291,16 +265,15 @@ void initGraphics() {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image->width, image->height, 0, GL_RGB, GL_UNSIGNED_BYTE, image->pixels);
-        glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture
-        delete image; // Free image data
+        glBindTexture(GL_TEXTURE_2D, 0);
+        delete image;
         std::cout << "Marble texture loaded successfully using imageloader." << std::endl;
     }
 
-    // Initialize quadric for sphere
     sphereQuadric = gluNewQuadric();
     if (sphereQuadric) {
-        gluQuadricNormals(sphereQuadric, GLU_SMOOTH);   // Generate smooth normals
-        gluQuadricTexture(sphereQuadric, GL_TRUE);      // Generate texture coordinates
+        gluQuadricNormals(sphereQuadric, GLU_SMOOTH);
+        gluQuadricTexture(sphereQuadric, GL_TRUE);
     } else {
         std::cerr << "Failed to create GLUquadric object." << std::endl;
     }
@@ -313,10 +286,8 @@ void drawCongratulationsPopup() {
     int height = glutGet(GLUT_WINDOW_HEIGHT);
     const char* lines[] = {"CONGRATULATIONS!", "You finished the level!"};
     int numLines = 2;
-    // Tambahkan skor ke dalam string
     char scoreLine[64];
     snprintf(scoreLine, sizeof(scoreLine), "Your Score: %d", score);
-    // Setup ortho projection supaya text selalu di posisi layar
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
@@ -324,7 +295,6 @@ void drawCongratulationsPopup() {
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     glLoadIdentity();
-    // Draw semi-transparent background rectangle
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_LIGHTING);
     glEnable(GL_BLEND);
@@ -338,7 +308,6 @@ void drawCongratulationsPopup() {
         glVertex2i(boxX + boxW, boxY + boxH);
         glVertex2i(boxX, boxY + boxH);
     glEnd();
-    // Draw congratulation text, centered per line
     glColor3f(1.0f, 1.0f, 0.0f);
     void* font = GLUT_BITMAP_HELVETICA_18;
     int lineHeight = 36;

@@ -1,6 +1,6 @@
 #include "utils.h"
-#include "globals.h" // For M_PI
-#include <cmath>     // For floor if needed by other utils in future
+#include "globals.h" 
+#include <cmath>     
 
 float degToRad(float deg) {
     return deg * (float)M_PI / 180.0f;

@@ -25,7 +25,7 @@ void drawMarble() {
     
     if (marbleRadius > 1e-6f && deltaTime > 0.0f) {
         float deltaAngleX = (marbleVZ * deltaTime / marbleRadius) * (180.0f / 3.1415926535f);
-        float deltaAngleZ = (marbleVX * deltaTime / marbleRadius) * (180.0f / 3.1415926535f); // Changed -marbleVX to marbleVX
+        float deltaAngleZ = (marbleVX * deltaTime / marbleRadius) * (180.0f / 3.1415926535f);
         totalRotationAngleX += deltaAngleX;
         totalRotationAngleZ += deltaAngleZ;
     }

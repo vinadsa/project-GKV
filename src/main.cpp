@@ -1,28 +1,28 @@
 #include <GL/glut.h>
-#include <cmath>         // For trigonometric functions like sin() and cos()
-#include "globals.h"      // For global variables and M_PI (though M_PI might be better in utils.h if not widely needed)
+#include <cmath>         
+#include "globals.h"
 #include "utils.h"
 #include "arena.h"
 #include "marble.h"
 #include "physics.h"
-#include "camera.h"       // Not strictly needed if only globals are used from it
+#include "camera.h"
 #include "input.h"
 #include "checkpoint.h"
-#include "graphics.h"     // For display, reshape, timer, initGraphics
-#include "timer.h"        // Added for timer functionality
+#include "graphics.h" 
+#include "timer.h"
 
 void initGame() {
-    initKeyStates();         // Initialize keyboard states
-    setupArenaGeometry();    // Define the arena layout
-    setupCheckpoints();      // Define checkpoints after arena is built
-    resetMarbleInitialState(); // Set a very basic marble position
-    score = 0;          // Reset score to zero
-    activeCheckpointIndex = -1; // Ensure we start fresh with checkpoints
-    resetMarble();           // Reset marble to the first checkpoint (or defined start)
-    initGraphics();          // Initialize OpenGL specific settings (lighting, depth test, etc.)
-    resetTimer();            // Reset the timer
-    initCountdownTimer(60.0); // Initialize countdown with 1 minute
-    startTimer();            // Start the timer
+    initKeyStates();
+    setupArenaGeometry();
+    setupCheckpoints();
+    resetMarbleInitialState();
+    score = 0; 
+    activeCheckpointIndex = -1;
+    resetMarble();
+    initGraphics();
+    resetTimer();
+    initCountdownTimer(60.0);
+    startTimer();
 }
 
 
@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
     glutInitWindowSize(800, 600);
     glutCreateWindow("Marble Arena Game - Refactored");
 
-    initGame(); // Call our game initialization function
+    initGame();
 
     glutDisplayFunc(display);
     glutReshapeFunc(reshape);
